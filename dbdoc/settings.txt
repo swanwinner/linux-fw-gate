@@ -1,0 +1,12 @@
+
+mysql> select * from settings;
++----+-----------------------+--------+
+| id | skey                  | svalue |
++----+-----------------------+--------+
+|  1 | block_new_mac_address | 1      |
+|  2 | secchk3212            | 1      |
+|  3 | security_check_start  | 1      |
++----+-----------------------+--------+
+3 rows in set (0.00 sec)
+
+

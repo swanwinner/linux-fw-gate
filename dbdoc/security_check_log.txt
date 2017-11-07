@@ -1,0 +1,23 @@
+
+
+drop table security_check_log ;
+
+
+CREATE TABLE `security_check_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  start_date  char(6) default '' comment '시작 날짜 YYMMDD',
+  `confirm1` tinyint(4) DEFAULT '0' comment '확인',
+  `time1` datetime DEFAULT NULL comment '확인시간',
+  `mac` char(17) DEFAULT NULL COMMENT 'MAC 주소',
+  PRIMARY KEY (`id`),
+  KEY `id` (`id`)
+) ;
+
+
+
+desc  security_check_log;
+
+mysql>  SHOW FULL COLUMNS FROM  security_check_log ;
+
+
+

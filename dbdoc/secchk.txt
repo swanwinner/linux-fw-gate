@@ -1,0 +1,22 @@
+
+CREATE TABLE `secchk3312` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `confirm1` tinyint(4) DEFAULT '0',
+  `time1` datetime DEFAULT NULL,
+  `mac` char(17) DEFAULT NULL COMMENT 'MAC 주소',
+  PRIMARY KEY (`id`),
+  KEY `id` (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=5040 DEFAULT ;
+
+
+CREATE TABLE `security_check_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  start_date date comment '시작 날짜',
+  `confirm1` tinyint(4) DEFAULT '0' comment '확인',
+  `time1` datetime DEFAULT NULL comment '확인시간',
+  `mac` char(17) DEFAULT NULL COMMENT 'MAC 주소',
+  PRIMARY KEY (`id`),
+  KEY `id` (`id`)
+) ;
+
+
