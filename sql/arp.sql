@@ -1,0 +1,7 @@
+ CREATE TABLE `arp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ip` char(20) DEFAULT NULL,
+  `mac` char(20) DEFAULT NULL,
+  `udate` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=108743395 DEFAULT CHARSET=utf8 
