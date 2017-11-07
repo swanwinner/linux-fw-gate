@@ -1,0 +1,71 @@
+
+. /www/gate/config/config.sh
+
+#echo $DRM_SERVER_1
+#echo $DRM_SERVER_2
+
+cd $GATE_PATH/cron
+
+pidfile=$GATE_PATH/var/tcpdump.pid
+
+
+if [[ ! -z $1 && $1 == 'start' ]]; then
+  if [ -f $pidfile ]; then
+    echo "it seems that tcpdump is running... do not start another one. exiting."
+    exit
+  fi
+
+  echo "starting tcpdump and dumpfilter..."
+  ./tcpdump.sh | ./dumpfilter.php &
+  exitcode=$?
+  echo "exitcode=$exitcode"
+  if [[ $exitcode > 0 ]]; then
+    echo 'error during staring process'
+  else
+    echo "successfully started"
+  fi
+  exit
+fi
+
+if [[ ! -z $1 && $1 == 'stop' ]]; then
+
+  if [ ! -f $pidfile ]; then
+    echo "pid file does not exists"
+    exit
+  else
+  
+    pid=`cat $pidfile`
+    echo "kill pid $pid.."
+    kill -9 $pid
+    exitcode=$?
+    echo "exitcode=$exitcode"
+
+    if [[ $exitcode > 0 ]]; then
+      echo 'error during killing process'
+    else
+      echo "successfully killed"
+      echo "delete pid file"
+      rm -f $pidfile
+    fi
+
+  fi
+  exit
+fi
+
+if [[ ! -z $1 && $1 == 'status' ]]; then
+  if [ -f $pidfile ]; then
+    echo "pid file exists"
+    pid=`cat $pidfile`
+    echo "pid is $pid"
+    echo "ps | grep $pid"
+    /bin/ps -eo pid,ppid,user,etime,time,cmd | grep $pid
+  else
+    echo "pid file does not exist"
+  fi
+  exit
+fi
+
+echo "help:"
+echo "dumpfilter.sh [start | stop | status]"
+
+

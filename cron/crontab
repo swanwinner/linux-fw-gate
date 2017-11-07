@@ -1,0 +1,4 @@
+*/5 * * * *  /www/gate/cron/cron.sh
+*/1 * * * *  /www/gate/cron/iftop.sh 
+*/1 * * * *  /www/gate/cron/readarp.sh 
+

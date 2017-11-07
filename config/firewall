@@ -1,0 +1,116 @@
+#!/bin/sh
+
+
+source /www/gate/config/config.sh
+
+iptables=/sbin/iptables
+export PATH=/sbin:$PATH
+
+# DISPLAY
+if [[ ! -z $1 && $1 == '-s' ]]; then
+
+  echo "--------------------------------------------------------------------"
+  echo "iptables -t nat -nv -L PREROUTING"
+  echo "--------------------------------------------------------------------"
+  iptables -t nat -nv -L PREROUTING
+
+  echo "--------------------------------------------------------------------"
+  echo "iptables -L INPUT -nv"
+  echo "--------------------------------------------------------------------"
+  iptables -L INPUT -nv
+
+  echo "--------------------------------------------------------------------"
+  echo "iptables -L FORWARD -nv"
+  echo "--------------------------------------------------------------------"
+  iptables -L FORWARD -nv
+
+  echo "--------------------------------------------------------------------"
+  echo "iptables -t nat -nv -L POSTROUTING"
+  echo "--------------------------------------------------------------------"
+  iptables -t nat -nv -L POSTROUTING
+
+  echo "--------------------------------------------------------------------"
+  echo "iptables -t nat -nv -L PREROUTING"
+  echo "--------------------------------------------------------------------"
+  iptables -t nat -nv -L PREROUTING
+
+  exit
+fi
+
+# flush all rules of all chains
+$iptables -t filter --flush
+$iptables -t nat --flush
+$iptables -t mangle --flush
+
+# define default policies
+$iptables --policy INPUT DROP
+$iptables --policy OUTPUT ACCEPT
+$iptables --policy FORWARD ACCEPT
+
+# loop back device
+$iptables -A INPUT -i lo -j ACCEPT
+
+# accept tcp non-SYN packets
+$iptables -A INPUT -p tcp ! --syn -j ACCEPT
+
+echo "set ip forward"
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+######################################################
+# nat PREROUTING 
+######################################################
+
+# blocks
+#iptables -t nat -A PREROUTING  -p tcp -i $DEVINT -m mac --mac-source [MAC] -j DNAT --to-destination $IPINT
+/www/gate/rule/block.sh
+
+######################################################
+# nat POSTROUTING
+######################################################
+
+$iptables -t nat -A POSTROUTING -s 192.168.0.0/24   -o $DEVEXT -j SNAT --to $IPEXT
+$iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -o $DEVEXT -j SNAT --to $IPEXT 
+
+# 허용 (허용된 아이피만 규칙에 넣음)
+/www/gate/rule/permit.sh
+
+######################################################
+# FORWARD filter
+######################################################
+
+$iptables -A FORWARD -i $DEVEXT -o $DEVINT -m state --state ESTABLISHED,RELATED -j ACCEPT
+$iptables -A FORWARD -i $DEVINT -o $DEVEXT -j ACCEPT
+
+######################################################
+# TRUSTED NETWORK
+######################################################
+$iptables -A INPUT -s 192.168.0.0/16   -j ACCEPT  # internal B class
+ 
+######################################################
+# SERVICES
+######################################################
+# ----------------------------------------------------------------------------
+# DNS
+# ----------------------------------------------------------------------------
+$iptables -A INPUT   -p udp --sport 53 -j ACCEPT
+$iptables -A INPUT   -p udp --dport 53 -j ACCEPT
+$iptables -A FORWARD -p udp --sport 53 -j ACCEPT
+$iptables -A FORWARD -p udp --dport 53 -j ACCEPT
+
+# ----------------------------------------------------------------------------
+# httpd
+# ----------------------------------------------------------------------------
+$iptables -A INPUT -p tcp --dport 80  -j ACCEPT
+$iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# ----------------------------------------------------------------------------
+# ssh
+# ----------------------------------------------------------------------------
+$iptables -A INPUT -p tcp      --dport 22 -j ACCEPT # 
+$iptables -A INPUT -p tcp      --dport 2222 -j ACCEPT # 
+
+# ----------------------------------------------------------------------------
+# icmp (ping)
+# ----------------------------------------------------------------------------
+$iptables -A INPUT -p icmp -j ACCEPT
+
