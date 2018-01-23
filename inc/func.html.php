@@ -40,6 +40,9 @@ EOS;
 
 function AdminPageTail() {
   print<<<EOS
+<div style="position:fixed; bottom:0; width:100%; background-color:#eee; text-align:center; color:#ccc; font-size:x-small;">
+linux-gate-fw v2.0 (2018.1.24)
+</div>
 </body>
 </html>
 EOS;
