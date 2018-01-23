@@ -68,18 +68,10 @@ td.pager_static {
 /* 셀렉트 박스 */
 select { font-family:굴림,돋움,verdana; font-size:9pt; }
 
-/*
-  mkdir -p img/icon
-  cd img/icon
-  wget http://edu.matthias.or.kr/img/icon/ico_desc.gif
-  wget http://edu.matthias.or.kr/img/icon/ico_warn.png
-*/
 p.desc { margin:0 0 0 0px; padding-left:16px;
  background:url('/img/icon/ico_desc.gif') no-repeat left top; color:#888; }
 p.warn { margin:0 0 0 0px; padding-left:16px;
  background:url('/img/icon/ico_warn.png') no-repeat left top; color:#f88; }
-
-
 
 /* mm 데이터 테이블 */
 table.mmdata { border-collapse: collapse; }
