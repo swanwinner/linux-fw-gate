@@ -5,6 +5,7 @@
   $conf['dbuser']   = "root";
   $conf['dbpasswd'] = "************";
   $conf['dbname']   = "ipdb";
+  $conf['use_mysqli']   = true;
 
   $conf['head_title'] = 'IP Manager';
 
