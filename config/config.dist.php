@@ -33,7 +33,6 @@
   );
 
   $conf['developer_pass'] = '930ccd6232ec9a1990e9043b691f1698';
-
   $conf['contact_point'] = '전산관리자';
 
   $conf['html_notice1'] =<<<EOS
