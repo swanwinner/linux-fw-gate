@@ -82,6 +82,7 @@ CREATE TABLE `ipdb` (
 
 
 alter table ipdb add column ds_usage_check tinyint default 0 comment '문서보안 사용여부 체크';
-alter table ipdb add column ds_no_use_cuase char(100) default '' comment '문서보안 미사용 사유';
+alter table ipdb add column ds_no_use_cause char(100) default '' comment '문서보안 미사용 사유';
+
 
 
