@@ -3,6 +3,53 @@
   include("path.php");
   include("$env[prefix]/inc/common.php");
 
+### {{{
+function _get_company($company, $mac6) {
+
+  $lookup =<<<EOS
+<a href='http://standards.ieee.org/cgi-bin/ouisearch?$mac6' target='_blank'>$mac6</a>
+<a href='http://aruljohn.com/mac/$mac6' target='_blank'>$mac6</a>
+EOS;
+
+  global $env;
+  $update=<<<EOS
+<a href='$env[self]?mode=arpupdate&mac=$mac6' target='hiddenframe'>___</a>
+EOS;
+
+  if ($company) {
+    $html = "$lookup $company";
+  } else {
+    $html = "$lookup $update";
+  }
+  return $html;
+}
+
+// hiddenframe($debug, 'hiddenframe', 600, 600);
+function _hiddenframe($debug, $name='hiddenframe', $w=600, $h=600) {
+  if ($debug) {
+    print("<iframe name='$name' width='$w' height='$h' style='display:block'></iframe>");
+  } else {
+    print("<iframe name='$name' width='0' height='0' style='display:none'></iframe>");
+  }
+}
+
+### }}}
+
+### {{{
+if ($mode == 'arpupdate') {
+  //print_r($form);
+  $mac = $form['mac'];
+  //print($mac);
+
+  $url = "http://standards.ieee.org/cgi-bin/ouisearch?$mac";
+  $cont = file_get_contents($url);
+  print($cont);
+
+  exit;
+}
+### }}}
+
+
   $title = 'ARP 캐시 조회';
   AdminPageHead($title);
   ParagraphTitle($title);
@@ -19,7 +66,7 @@ table.main td.a { text-align:right; font-family:돋움체; text-align:left; }
 pre.line { background-color:white; margin:0 0 0 0; }
 </style>
 EOS;
-
+  _hiddenframe($debug=0, 'hiddenframe', 600, 300);
 
   print<<<EOS
 <pre>
@@ -156,6 +203,9 @@ EOS;
       else $str = "유동";
       $staticip_s = $str;
 
+#     $company = $row['company'];
+#     $mac6 = preg_replace("/:/", "", substr($mac, 0, 8));
+#     $company = _get_company($company, $mac6);
 
       $company = $row['company'];
       $mac6 = preg_replace("/:/", "", substr($mac, 0, 8));

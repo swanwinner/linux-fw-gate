@@ -16,8 +16,10 @@ if ($mode == 'save') {
   $ret = db_query($qry);
 
   $v = $form['security_check_date'];
-  $qry = "INSERT INTO settings (skey, svalue) VALUES ('security_check_date', '$v') ON DUPLICATE KEY UPDATE svalue='$v'";
-  $ret = db_query($qry);
+  if ($v != '') {
+    $qry = "INSERT INTO settings (skey, svalue) VALUES ('security_check_date', '$v') ON DUPLICATE KEY UPDATE svalue='$v'";
+    $ret = db_query($qry);
+  }
 
   print<<<EOS
 <script>
@@ -74,12 +76,19 @@ EOS;
 </tr>
 EOS;
 
+  if ($setting['security_check_start'] == '1') {
+    $dis = ' disabled';
+  } else {
+    $dis = '';
+  }
+
   $v = $setting['security_check_date'];
   print<<<EOS
 <tr>
 <th>보안시작날짜</th>
 <td class='l'>
-<p><label><input type='text' name='security_check_date' value='$v'>예)161107</label>
+<p><label><input type='text' name='security_check_date' value='$v' $dis>예)161107</label>
+(보안점검시작 날짜하는 날짜)
 </td>
 </tr>
 EOS;

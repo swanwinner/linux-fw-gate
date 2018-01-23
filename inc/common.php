@@ -3,7 +3,6 @@
   include("$env[prefix]/config/config.php");
   include("$env[prefix]/inc/func.php");
 
-
   session_start();
 # print_r($_SESSION); exit;
 
