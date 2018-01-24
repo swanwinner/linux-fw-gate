@@ -1,14 +1,4 @@
 
-<<<<<<< HEAD
-/*
-# /[^a-zA-Z0-9 \.\(\)&\*\/,\-	='";:+íÓÇçÕõäï¿½üáéóôÁÅÃåöãÜÝ!`]
-*/
-
-
-drop TABLE `oui` ;
-
-=======
->>>>>>> e703cf9acae8da51e722f66723dccf8cfe95aa1f
 CREATE TABLE `oui` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mac6` char(8) DEFAULT NULL,
@@ -17,7 +7,6 @@ CREATE TABLE `oui` (
   KEY `id` (`id`),
   KEY `mac6` (`mac6`)
 ) ;
-
 
 
 insert into oui set mac6='00-00-00', company="XEROX CORPORATION";
