@@ -1702,6 +1702,7 @@ function deleteBtn() {
   if (c == 0) {
     alert('선택한 것이 없습니다.'); return;
   }
+  if (c > 20) { alert('한 번에 20건 이상은 삭제 불가합니다.'); return; }
   var msg = "선택항목 "+c+"건을 삭제할까요?";
   if (!confirm(msg)) return;
 
