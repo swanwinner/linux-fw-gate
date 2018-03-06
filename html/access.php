@@ -1,5 +1,7 @@
 <?php
 
+die('do not use');
+
   include("path.php");
   include("$env[prefix]/inc/common.php");
 
