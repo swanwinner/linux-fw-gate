@@ -930,6 +930,63 @@ function download_td($str) {
 EOS;
 }
 
+function current_ip() {
+  return $_SERVER['REMOTE_ADDR'];
+}
 
+
+#   $list = array('chul_attd:1','chul_attd_yyyymmdd:2');
+#   $preset = $form['ttype']; if (!$preset) $preset = '1';
+#   print radio_list_general('ttype', $list, $preset);
+function radio_list_general($fname, $list, $preset, $onclick='', $add_if_not_in_list=true) {
+  $html = '';
+
+  $tlist = $vlist = array();
+  foreach ($list as $item) {
+    list($t, $v) = preg_split("/:/", $item);
+    if ($v == '') $v = $t;
+    if ($v == 'null') $v = '';
+    $tlist[] = $t;
+    $vlist[] = $v;
+  }
+
+  if ($add_if_not_in_list) {
+    // preset 이 리스트에 없으면 추가
+    if (!in_array($preset, $vlist)) { $tlist[] = $preset; $vlist[] = $preset; }
+  }
+
+  $len = count($vlist);
+  for ($i = 0; $i < $len; $i++) {
+    $v = $vlist[$i];
+    $t = $tlist[$i];
+
+    if ($onclick) { $onclick_attr = " onclick=\"$onclick\""; }
+    if ($preset == $v) $sel = ' checked'; else $sel = '';
+    $html .=<<<EOS
+<label style='cursor:pointer'><input type='radio' name='$fname' value='$v'$sel$onclick_attr>$t</label>
+EOS;
+  }
+  return $html;
+}
+
+// $list = get_form_info($prefix='key');
+function get_form_info($prefix='key', $frm='') {
+  global $form;
+  if (!$frm) $frm = $form;
+
+  $keys = array_keys($frm);
+  $count = 0;
+  $info = array();
+  for ($i = 0; $i < count($keys); $i++) {
+    $key = $keys[$i];
+    $val = $form[$key];
+    list($a, $b) = explode('_', $key);
+    if ($a == $prefix) {
+      $count++;
+      $info[] = array($b, $val);
+    }
+  }
+  return $info;
+}
 
 ?>
