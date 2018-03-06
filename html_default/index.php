@@ -40,9 +40,9 @@ function _get_mac_addr() {
 #   exit;
 # }
 
-  // 예를 들어 www.naver.com 으로 접속을 시도하여 iptables 규칙으로
+  // 예를 들어 www.daum.net  으로 접속을 시도하여 iptables 규칙으로
   // internal gate 로 포워딩 되었을 경우 $http_host 값은
-  // www.naver.com 이 되므로 내부 게이트 주소와 다르게 된다.
+  // www.daum.net  이 되므로 내부 게이트 주소와 다르게 된다.
   // http://내부게이트주소/ 로 접속을 유도한다.
   if ($http_host != $conf['internalgate']) {
     //print_r($_SERVER);
@@ -112,7 +112,7 @@ MAC: $mac
 
 문제가 계속되면 {$conf['contact_point']}로 연락바랍니다.
 
-<a href='http://www.naver.com/'>인터넷 접속</a>
+<a href='http://www.daum.net/'>인터넷 접속</a>
 $updatetime (update)
 $now (now)
 
@@ -141,7 +141,7 @@ EOS;
       $msg.=<<<EOS
 <br>
 5분 정도 기다리시면 인터넷 사용이 가능합니다.
-<a href='http://www.naver.com/'>네이버 접속</a>
+<a href='http://www.daum.net/'>네이버 접속</a>
 EOS;
     }
 
