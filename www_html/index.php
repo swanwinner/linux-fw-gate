@@ -80,7 +80,7 @@ EOS;
       $msg.=<<<EOS
 <br>
 5분 정도 기다리시면 인터넷 사용이 가능합니다.
-<a href='http://www.naver.com/'>네이버 접속</a>
+<a href='http://www.daum.net/'>인터넷 접속</a>
 EOS;
     }
 
