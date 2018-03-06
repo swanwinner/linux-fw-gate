@@ -21,7 +21,6 @@ body,input {  font-size: 12px; font-family: 굴림,돋움,verdana;
   font-style: normal; line-height: 12pt;
   text-decoration: none; color: #333333;
 }
-table,td,th { font-size: 12px; font-family: 돋움,verdana; white-space: nowrap; }
 </style>
 
 <!--
