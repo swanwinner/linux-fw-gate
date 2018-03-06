@@ -3,6 +3,7 @@
   include("path.php");
   include("$env[prefix]/inc/common.php");
 
+### {{{
 function _summary() {
   $qry = "select count(*) count from ipdb where sflag=1"; // 점검 대상
   $ret = db_query($qry);
@@ -82,21 +83,53 @@ EOS;
 
 }
 
+function _find_record($mac) {
+  $qry = "SELECT i.*, p.*"
+     ." FROM ipdb i"
+     ." LEFT JOIN points p ON i.mac=p.mac"
+     ." WHERE i.mac='$mac'";
+  $ret = db_query($qry);
+  $row = db_fetch($ret);
+  return $row;
+}
+### }}}
 
+### {{{
 // 점수 저장
 if ($mode == 'save_point') {
+
+  // 점수저장 sql_set
   //dd($form);
+  $a = array();
+  $list = get_form_info($prefix='q');
+  //dd($list);
+  $sum = 0;
+  foreach ($list as $row) {
+    $q = $row[0];
+    $v = $row[1];
+    $sum += $v;
+    $a[] = "p$q='$v'";
+  }
+  //dd($a);
+  $a[] = "point='$sum'";
+  $sql_set = " SET ".join(",", $a);
 
   $mac = $form['mac'];
-  $point = $form['point'];
 
-  $qry = "UPDATE ipdb SET point='$point' where mac='$mac'";
-  $ret = db_query($qry);
+  $qry = "select * from points where mac='$mac'";
+  $row = db_fetchone($qry);
+  if ($row) {
+    $qry = "UPDATE points $sql_set where mac='$mac'";
+    $ret = db_query($qry);
+  } else {
+    $qry = "insert into points $sql_set,mac='$mac'";
+    $ret = db_query($qry);
+  }
 
   InformRedir('저장하였습니다.', "$env[self]");
   exit;
 }
-
+### }}}
 
   AdminPageHead('보안점검');
 
@@ -117,7 +150,6 @@ div.info p span.strong { font-size:15pt; font-weight:bold; }
 
 div.summary { background-color:#fff; border:5px solid #339933; width:600px; margin:3 3 3 3px; padding:3 3 3 3px; }
 div.summary p { margin:3 3 3 3px; font-size:12pt; font-weight:normal; line-height:150%; }
-
 
 .myButton {
 	-moz-box-shadow: 0px 1px 0px 0px #fff6af;
@@ -164,22 +196,22 @@ div.summary p { margin:3 3 3 3px; font-size:12pt; font-weight:normal; line-heigh
 EOS;
 
 
-function _find_record($mac) {
-  $qry = "SELECT * FROM ipdb WHERE mac='$mac'";
-  $ret = db_query($qry);
-  $row = db_fetch($ret);
-  return $row;
-}
 
-  $ip = $_SERVER['REMOTE_ADDR'];
+  $f_mac = $form['mac'];
+  if ($f_mac == '') {
+    $ip = current_ip();
+    $command = "/sbin/arp -n | grep '$ip '";
+    $lastline = exec($command, $out, $retval);
+    list($a,$b,$c,$d,$e) = preg_split("/ +/", $lastline);
+    $mac = $c;
+  } else {
+    $mac = $f_mac;
+  }
 
-  $command = "/sbin/arp -n | grep '$ip '";
-  $lastline = exec($command, $out, $retval);
-  list($a,$b,$c,$d,$e) = preg_split("/ +/", $lastline);
-  $mac = $c;
   $row = _find_record($mac);
   $register_ip = $row['ip'];
   //dd($row);
+  $ipnow = $row['ipnow'];
 
   $mac_u = urlencode($mac);
   $url = "/home.php?mode=search&mac=$mac_u&fd02=on&fd06=on&fd07=on&fd09=on&fd11=on";
@@ -195,59 +227,179 @@ function _find_record($mac) {
 <p>사용자: <span class='strong'>{$row['name']}</span></p>
 <p>메모: <span class='strong'>{$row['memo']}</span></p>
 <p>종류: <span class='strong'>{$row['dtype']}</span></p>
-<p>사용중인 IP: <span class='strong'>$ip</span></p>
-<p>등록된 IP: <span class='strong'>$register_ip</span></p>
-
-<form action='$env[self]' metho='post'>
-<p>점수: 
-<input type='text' name='point' value="{$row['point']}" size='10' onclick='this.select()'>점
-<input type='hidden' name='mac' value='$mac'>
-<input type='hidden' name='mode' value='save_point'>
-<input type='submit' value='저장'>
-</p>
-</form>
+<p>현재 IP: <span class='strong'>$ip</span></p>
+<p>등록된 IP: <span class='strong'>$register_ip ($ipnow)</span></p>
 
 </div>
 EOS;
 
-  _summary();
+  //_summary();
+
+
+ $data = array(
+ array('no' => 1,
+ 'title' => '1. DRM 설치여부',
+ 'desc' => '센터 사무실 내 시험지 취급하는 PC 1대를 제외한 모든 PC는 DRM을 설치 (개인PC도 예외없음)',
+ 'select' => array('설치'=>1, '미설치'=>0),
+ ),
+ array('no'=> 2,
+ 'title' => "2. 비보안 문서 작성 및 보유 여부",
+ 'desc' => "센터내 DRM 설치 PC 사용시 반드시 DRM을 켜놓고 문서 작업을 할 것 (비보안문서는 모두 삭제하여 PC안에 없어야함, 비보안문서에 비번설정이나 압축 등의 방법으로 보관하는 것도 허용되지 않음) 보안마크가 없는 신천지 문서는 파쇄해야 함. (예외: 교적부, 신앙관리카드, 입교다짐서, 입학원서, 면접질문지, 센터시험지)",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 3,
+ 'title' => "3. 비보안 문서 출력여부",
+ 'desc' => "비보안문서 작업 PC 1대를 제외한 모든 PC는 프린터와 연결이 되어있으면 안됨",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 4,
+ 'title' => "4. 신천지 문서 방치 여부",
+ 'desc' => "보안마크가 찍힌 출력문서는 반드시 잠금장치가 되어 있는 캐비닛이나 서랍에 보관해야 함",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 5,
+ 'title' => "5. 주요문서 파쇄 여부",
+ 'desc' => "보안마크가 찍힌 신천지 문서는 반드시 파쇄기를 사용하여 파기",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 6,
+ 'title' => "6. PC 로그인 암호 설정 여부",
+ 'desc' => "윈도우 로그인 암호 설정시, 12000, 144000, 신천지 같은 단순 암호 사용금지",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 7,
+ 'title' => "7. 화면보호기 암호",
+ 'desc' => "화면보호기는 최대 10분으로 설정",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 8,
+ 'title' => "8. 백신 프로그램 설치 여부",
+ 'desc' => "알약 설치",
+ 'select' => array('설치'=>1, '미설치'=>0),
+ ),
+ array('no'=> 9,
+ 'title' => "9. 바이러스 및 악성코드 감염 여부",
+ 'desc' => "백신 전체검사 하여 바이러스가 검출되면 안됨",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 10,
+ 'title' => "10. 랜섬웨어 예방",
+ 'desc' => "알약 내 환경설정 (랜섬웨어 차단항목 ON설정)",
+ 'select' => array('설정'=>1, '미설정'=>0),
+ ),
+ array('no'=> 11,
+ 'title' => "11. 원격제어 프로그램설치 여부",
+ 'desc' => "원격프로그램은 제어판에서 반드시 삭제할 것 (팀뷰어, 크레이지 리모트 등)",
+ 'select' => array('미설치'=>1, '설치'=>0),
+ ),
+ array('no'=> 12,
+ 'title' => "12. 원격제어 차단설정 여부",
+ 'desc' => "내컴퓨터 마우스 오른쪽 버튼 클릭후 -＞ 속성 마지막텝인 원격으로 들어가서 원격설정 해제",
+ 'select' => array('설정해제'=>1, '설정'=>0),
+ ),
+ array('no'=> 13,
+ 'title' => "13. P2P 프로그램 및 게임 설치 여부",
+ 'desc' => "제어판에서 토렌트, P2P프로그램 삭제, 게임도 삭제",
+ 'select' => array('미설치'=>1, '설치'=>0),
+ ),
+ array('no'=> 14,
+ 'title' => "14. 비인가 파일 공유프로그램 설치 여부",
+ 'desc' => "네이버 N 드라이브, 다음 클라우드 BOX 스토리지onedrive, 드롭박스, 웹하드 사용금지",
+ 'select' => array('미사용'=>1, '사용'=>0),
+ ),
+ array('no'=> 15,
+ 'title' => "15. 비인가 이동식 저장매체 사용 여부",
+ 'desc' => "점검기간내에 외장하드 및 USB사용금지",
+ 'select' => array('미사용'=>1, '사용'=>0),
+ ),
+ array('no'=> 16,
+ 'title' => "16. 가상 윈도우 설치 여부",
+ 'desc' => "VMWare 사용금지",
+ 'select' => array('미사용'=>1, '사용'=>0),
+ ),
+ array('no'=> 17,
+ 'title' => "17. 출입문 보안 상태 여부",
+ 'desc' => "사무실 시건장치 확인",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 18,
+ 'title' => "18. 문서 보관함 잠금장치 및 관리 상태 여부",
+ 'desc' => "담당자가 없을 시에 문서 및 자료 보관용 캐비넷은 잠겨 있어야함",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 19,
+ 'title' => "19. 인가 컴퓨터 확인 여부",
+ 'desc' => "PC사용 비품라벨이 부착되어 있어야함",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ array('no'=> 20,
+ 'title' => "20. 자료방치여부",
+ 'desc' => "담당자가 없을 시에 서류가 방치되어 있으면 안됨",
+ 'select' => array('양호'=>1, '불량'=>0),
+ ),
+ );
+
+function _question($item, $preset) {
+
+  $list = array();
+  foreach ($item['select'] as $t=>$v) {
+    $list[] = "$t:$v";
+  }
+
+  $no = $item['no'];
+  $fn = "q_$no";
+
+  //$preset = $form[$fn]; if (!$preset) $preset = '';
+  $html = radio_list_general($fn, $list, $preset, '', false);
 
   print<<<EOS
-<pre>
-[[보안 점검 방법]]
+<table border='1' class='question'>
+<tr>
+<td class='title'>{$item['title']}</td>
+</tr>
+<tr>
+<td class='desc'>{$item['desc']}</td>
+</tr>
+<tr>
+<td class='select'>{$html}</td>
+</tr>
+</table>
+EOS;
+}
 
-* 실사용자 정보 확인
-- 관리자 사이트에 로그인
-- 보안점검 메뉴 클릭 (현재 컴퓨터의 IP와 맥주소가 나옵니다)
-- 검색을 눌러서 등록된 사용자 정보를 확인하고 실제 사용자정보가 아니면 수정합니다.
-
-* IP 설정을 확인
-네트워크 환경 - 어댑터 설정 - 로컬네트워크속성 - IPv4 속성
-
-1) DRM 미사용자이면
-  고정IP로 130 서브넷 대역으로 설정
- '지정된 IP주소가 아니면 차단 정책 적용' 옵션을 체크. 그외 다른 옵션들은 안 건드려도 됨
-
-2) DRM이 설치되어있으면 유동IP 또는 0,101,107,110,111,125 서브넷 중 하나로 설정
-  <strike>(가능하면 유동IP로 설정하기 보다는 고정IP로 설정)</strike>
-  모두 고정 아이피로 설정할 것, '지정된 IP주소가 아니면 차단 정책 적용' 옵션을 체크할것
-
-내부 IP주소 192.168.N.xx
-
-N=0 정통부 서버, IP카메라, 지문인증기 등
-N=101 대전교회업무망 (고정IP할당)
-N=110 IP자동할당용
-N=111 IP자동할당용
-N=125 행정실,지파장님
-N=107 문화부전용 (신천지사이트 접속불가)
-N=130 문서보안 미설치 컴퓨터용 (신천지사이트 접속불가)
-
-그외 100,102,103,104,105,106,109,121,122 등으로 고정IP로 쓰고 있는 경우는 위 기준으로 subnet을 변경
-* 신천지사이트: 그룹웨어, 행정시스템, 인포맛디아
-
-</pre>
+  print<<<EOS
+<style>
+div.question { border:5px solid green; width:800px; }
+table.question { border-collapse: collapse; width:800px; border:0px; margin-bottom:30px; }
+table.question td { width:800px; word-break: break-all; border:0px solid #eee; }
+table.question td.title { font-size:15pt; }
+table.question td.desc { font-size:12pt; padding-left:20px; color:#999; }
+table.question td.select { font-size:15pt; padding-left:20px; color:#33f; }
+table.question td.select label { margin-left:30px; margin-right:30px;  }
+</style>
 EOS;
 
+  print<<<EOS
+<div class='question'>
+<form action='$env[self]' metho='post'>
+<p>점수: 
+<input type='text' name='point' value="{$row['point']}" size='10' onclick='this.select()' readonly style="color:#888; font-size:15pt;">점
+<input type='hidden' name='mac' value='$mac'>
+<input type='hidden' name='mode' value='save_point'>
+<input type='submit' value='저장'>
+</p>
+EOS;
+ 
+  foreach ($data as $item) {
+    $no = $item['no'];
+    $preset = $row["p$no"];
+    _question($item, $preset);
+  }
+
+  print<<<EOS
+</form>
+</div>
+EOS;
 
   AdminPageTail();
   exit;

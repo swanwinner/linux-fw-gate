@@ -172,6 +172,37 @@ function _option_subnet($preset) {
   return $opts;
 }
 
+function _save_points($id, $points, &$sum) {
+  $s = array();
+
+  $sum = 0;
+  $list = preg_split("/,/", $points);
+  $i = 1;
+  foreach ($list as $p) {
+    $sum += $p;
+    $s[] = "p{$i}='$p'";
+    $i++;
+    if ($i > 10) break;
+  }
+  $sql_set = " SET ".join(",", $s);
+
+  $qry = "select * FROM points where id='$id'";
+  $row = db_fetchone($qry);
+  if ($row) {
+    $qry = "UPDATE points"
+        .$sql_set
+        ." WHERE id='$id'";
+  } else {
+    $qry = "INSERT INTO points"
+        .$sql_set
+        .", id='$id'";
+  }
+  $ret = db_query($qry);
+// dd($qry); exit;
+
+}
+
+
 ### }}}
 
 
@@ -323,9 +354,11 @@ EOS;
   $sflag = $form['sflag'];
   $sec_chk_sflag = $form['sec_chk_sflag'];
   $checkStar = $form['checkStar'];
-  $point = $form['point'];
 
   $id = $form['id'];
+
+  $points = $form['points'];
+  _save_points($id, $points, $sum);
 
   $s = array();
 
@@ -353,7 +386,7 @@ EOS;
   $s[] = "staticip='$staticip'";
   $s[] = "natpubip='$natpubip'";
   $s[] = "checkStar='$checkStar'";
-  $s[] = "point='$point'";
+  $s[] = "point='$sum'";
   $s[] = "idate=NOW()";
   $sql_set = " SET ".join(",", $s);
 
@@ -424,6 +457,28 @@ parent.document.location.reload();
 EOS;
   exit;
 
+} else if ($mode == 'resetpoint') {
+
+  $ids = _get_cb_list();
+  //_dd($ids);
+
+  $len = count($ids);
+  for ($i = 0; $i < $len; $i++) {
+    $id = $ids[$i];
+
+    $qry = "UPDATE ipdb SET point='' WHERE id='$id'";
+    $ret = db_query($qry);
+
+    $qry = "DELETE FROM points WHERE id='$id'";
+    $ret = db_query($qry);
+  }
+
+  print<<<EOS
+<script>
+parent.document.location.reload();
+</script>
+EOS;
+  exit;
 
 // iframe 안에 로딩됨
 } else if ($mode == 'delete') {
@@ -453,12 +508,14 @@ EOS;
   } else if ($mode == 'edit') {
     $id = $form['id'];
 
-    $qry = "SELECT oui.company, a.*"
+    $qry = "SELECT oui.company, a.*, p.*"
    ." FROM (SELECT i.*, CONCAT(SUBSTRING(mac,1,2),'-',SUBSTRING(mac,4,2),'-',SUBSTRING(mac,7,2)) AS mac6 "
       ."  , UNIX_TIMESTAMP(sec_installed_time) ts1"
       ."  , UNIX_TIMESTAMP(sec_installed_time) ts2"
       ." FROM ipdb i WHERE i.id='$id') a"
-   ." LEFT JOIN oui ON a.mac6=oui.mac6";
+   ." LEFT JOIN oui ON a.mac6=oui.mac6"
+   ." LEFT JOIN points p on a.mac=p.mac"
+   ;
 
     $ret = db_query($qry);
     $row = db_fetch($ret);
@@ -686,11 +743,19 @@ EOS;
 </tr>
 EOS;
 
+# $points = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
+#    , $row['p1'] , $row['p2'] , $row['p3'] , $row['p4'] , $row['p5']
+#    , $row['p6'] , $row['p7'] , $row['p8'] , $row['p9'] , $row['p10']);
+  $t1 = textinput_general('point', $row['point'], $size='10', '', true, 0, 'background-color:lightgray;', ' readonly');
+# $t2 = textinput_general('points', $points, $size='40', '', true, 0);
+//세부점수: {$t2}점
+
   print<<<EOS
 <tr>
 <th>점수</th>
 <td>
-<input type='text' name='point' value="{$row['point']}" size='10' onclick="this.select()">점
+{$t1}점
+<a href="secchk2.php?mac={$row['mac']}" class='link'>[[점수변경]]</a>
 </td>
 </tr>
 EOS;
@@ -1252,7 +1317,8 @@ EOS;
   $b4 = button_general('전체선택', 0, "selectAll()", $style='', $class='');
   $b2 = button_general('보안점검 시작', 0, "setsflagBtn()", $style='', $class='');
   $b3 = button_general('보안점검 미시작', 0, "setsflagBtn(0)", $style='', $class='');
-  $btns = _button_box($b1, $b4, $b2, $b3);
+  $b5 = button_general('점수초기화', 0, "resetPoint()", $style='', $class='');
+  $btns = _button_box($b1, $b4, $b2, $b3, $b5);
 
   print<<<EOS
 {$conf['html_notice1']}
@@ -1425,11 +1491,12 @@ EOS;
   $sql_order = " ORDER BY $o";
 
 
-  $qry1 = "SELECT i.*"
+  $qry1 = "SELECT i.*, p.point _point"
    .", CONCAT(SUBSTRING(realmac,1,2),'-',SUBSTRING(realmac,4,2),'-',SUBSTRING(realmac,7,2)) AS mac6"
    .", if(i.ds_usage_check=1, '사용', if(i.ds_usage_check=2,'미사용','')) _drm_use"
    .", i.ds_no_use_cause _drm_cause"
    ." FROM ipdb i"
+   ." LEFT JOIN points p ON i.mac=p.mac"
    .$sql_where.$sql_order;
 
   $qry = "SELECT oui.company, A.*"
@@ -1579,7 +1646,7 @@ EOS;
       $fields[] = array($row['drm_port'], " class='c'");
     }
     if ($form['fd15']) { // 점수
-      $fields[] = array($row['point'], " class='r'");
+      $fields[] = array($row['_point'], " class='r'");
     }
     if ($form['fd16']) { // 문서보안 사용
       $fields[] = array($row['_drm_use'], " class='c'");
@@ -1677,6 +1744,18 @@ function setsflagBtn(sflag) {
   form2.submit();
 }
 
+function resetPoint() {
+  var c = _select_count();
+  if (c == 0) { alert('선택한 것이 없습니다.'); return; }
+  var msg = "선택항목 "+c+"건을 적용할까요?";
+  if (!confirm(msg)) return;
+
+  form2.target = 'hiddenframe';
+  form2.mode.value = 'resetpoint';
+  form2.submit();
+}
+
+
 // 전체선택
 var all_selected = false;
 function selectAll() {
@@ -1702,7 +1781,6 @@ function deleteBtn() {
   if (c == 0) {
     alert('선택한 것이 없습니다.'); return;
   }
-  if (c > 20) { alert('한 번에 20건 이상은 삭제 불가합니다.'); return; }
   var msg = "선택항목 "+c+"건을 삭제할까요?";
   if (!confirm(msg)) return;
 
