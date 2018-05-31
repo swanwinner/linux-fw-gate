@@ -230,6 +230,7 @@ function _changed_ip_permit($mac, $registered_ip, $ip, $row) {
   if ($cnt > 0) SaveLog("맥주소차단 현재 {$cnt}개");
 
 
+/*
   $qry = "SELECT i.*, s.confirm1
  FROM ipdb i
  left join secchk3212 s on i.mac=s.mac
@@ -243,6 +244,7 @@ function _changed_ip_permit($mac, $registered_ip, $ip, $row) {
     $mac = $row['mac'];
     $macs[$mac] = true;
   }
+*/
 
   // block.sh 파일을 기록
   $file = '';
