@@ -9,6 +9,10 @@ function AdminPageHead($title='', $menu=true) {
     $title = sprintf("%s - %s", $conf['head_title'], $title);
   }
 
+  global $env;
+  include("{$env['prefix']}/html/header.php");
+
+/*
   print<<<EOS
 <html>
 <head>
@@ -31,6 +35,7 @@ body,input {  font-size: 12px; font-family: 굴림,돋움,verdana;
 
 <body>
 EOS;
+*/
 
   if ($menu) {
     print $conf['menu_html'];

@@ -750,12 +750,13 @@ EOS;
 # $t2 = textinput_general('points', $points, $size='40', '', true, 0);
 //세부점수: {$t2}점
 
+  $mac = $row['realmac'];
   print<<<EOS
 <tr>
 <th>점수</th>
 <td>
 {$t1}점
-<a href="secchk2.php?mac={$row['mac']}" class='link'>[[점수변경]]</a>
+<a href="secchk2.php?mac={$mac}" class='link'>[[점수변경]]</a>
 </td>
 </tr>
 EOS;
@@ -1303,11 +1304,6 @@ EOS;
 
 
 if ($mode != 'search') {
-
-  print<<<EOS
-보안점검 메뉴로 들어가서 검색을 누르세요.
-EOS;
-
   AdminPageTail();
   exit;
 }
@@ -1502,6 +1498,7 @@ EOS;
   $qry = "SELECT oui.company, A.*"
    ." FROM ($qry1) A"
    ." LEFT JOIN oui ON A.mac6=oui.mac6";
+//dd($qry);
 
   $ret = db_query($qry);
 

@@ -99,7 +99,8 @@ function _find_record($mac) {
 if ($mode == 'save_point') {
 
   // 점수저장 sql_set
-  //dd($form);
+  //dd($form); exit;
+
   $a = array();
   $list = get_form_info($prefix='q');
   //dd($list);
@@ -126,7 +127,8 @@ if ($mode == 'save_point') {
     $ret = db_query($qry);
   }
 
-  InformRedir('저장하였습니다.', "$env[self]");
+  $url = "$env[self]?mac=$mac";
+  InformRedir('저장하였습니다.', $url);
   exit;
 }
 ### }}}

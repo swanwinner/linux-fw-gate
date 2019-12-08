@@ -3,6 +3,27 @@
   include("path.php");
   include("$env[prefix]/inc/common.php");
 
+
+### {{{
+function _get_row($ip) {
+  $qry = "SELECT * FROM ipdb WHERE ipnow='$ip'";
+  $ret = db_query($qry);
+  $row = db_fetch($ret);
+  return $row;
+}
+function _geoip_lookup($ip) {
+
+  list($a, $b, $c, $d) = preg_split("/\./", $ip);
+  $n = $a*256*256*256 + $b*256*256 + $c*256 + $d;
+
+  $qry = "SELECT * FROM GeoIP WHERE ipnfrom<='$n' AND '$n'<=ipnto";
+  $ret = db_query($qry);
+  $row = db_fetch($ret);
+  $nation = $row['nation'];
+  return $nation;
+}
+### }}}
+
   AdminPageHead('iftop');
   ParagraphTitle('iftop');
 
@@ -13,7 +34,6 @@ table.main th, table.main td { border:1px solid #999; padding:2 9 2 9px; }
 table.main th { background-color:#eeeeee; font-weight:bold; text-align:center; }
 table.main td.c { text-align:center; }
 table.main td.r { text-align:right; }
-
 span.link { cursor:pointer; color:#880000; }
 </style>
 EOS;
@@ -36,24 +56,6 @@ $content
 </pre>
 EOS;
 
-function _get_row($ip) {
-  $qry = "SELECT * FROM ipdb WHERE ipnow='$ip'";
-  $ret = db_query($qry);
-  $row = db_fetch($ret);
-  return $row;
-}
-function _geoip_lookup($ip) {
-
-  list($a, $b, $c, $d) = preg_split("/\./", $ip);
-  $n = $a*256*256*256 + $b*256*256 + $c*256 + $d;
-
-  $qry = "SELECT * FROM GeoIP WHERE ipnfrom<='$n' AND '$n'<=ipnto";
-  $ret = db_query($qry);
-  $row = db_fetch($ret);
-  $nation = $row['nation'];
-  return $nation;
-}
-
     print<<<EOS
 <table border='1' class='main'>
 <tr>
@@ -66,7 +68,7 @@ function _geoip_lookup($ip) {
 <th>2s</th>
 <th>10s</th>
 <th>40s</th>
-<th></th>
+<th>comulative</th>
 </tr>
 EOS;
   $list = preg_split("/\n/", $content);
