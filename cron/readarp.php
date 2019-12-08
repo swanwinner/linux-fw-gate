@@ -17,6 +17,7 @@
   read_arp_txt($arp);
   //dd($arp);
 
+/*
   $qry = "delete from arp";
   $ret = db_query($qry);
 
@@ -25,5 +26,6 @@
     $qry = "insert into arp set ip='$ip', mac='$mac', udate=NOW()";
     $ret = db_query($qry);
   }
+*/
 
 ?>
