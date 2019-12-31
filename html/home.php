@@ -3,7 +3,6 @@
   include("path.php");
   include("$env[prefix]/inc/common.php");
 
-
   $net_subnets = $conf['subnets'];
   $net_subnet_title = $conf['subnet_title'];
 
@@ -530,7 +529,7 @@ EOS;
   ParagraphTitle($title);
 
   print<<<EOS
-<table class='main' width='400'>
+<table class='main' width='400' style='margin-top:30px;'>
 <form name='form' action='$env[self]' method='post'>
 <tr>
  <td colspan='2' align='center'>
@@ -1075,10 +1074,10 @@ EOS;
 
   print<<<EOS
 <table class='main'>
-<form name='form' action='$env[self]' method='get'>
+<form name='form' action='$env[self]' method='post'>
 <tr>
- <td>
-<input type='button' onclick='sf_1()' value='검색' style='width:50; height:50;'>
+<td>
+<input type='button' value='확인' style='width:50px;height:50px;' onclick='sf_1()'>
 <input type='hidden' name='mode' value='search'>
  </td>
  <td>
@@ -1105,19 +1104,6 @@ OS종류:<input type='text' name='ostype' size='10' value='{$form['ostype']}'
  onkeypress='keypress_text()'
  onclick='this.select()'>
 EOS;
-
-/*
-  if ($row['ds_usage_check']) $chk1 = ' checked'; else $chk0 = ' checked';
-  print<<<EOS
-<tr>
-<th>문서보안사용</th>
-<td>
-<label><input type='radio' name='ds_usage_check' value='1'$chk1>사용</label>
-<label><input type='radio' name='ds_usage_check' value='0'$chk2>미사용</label>
-</td>
-</tr>
-EOS;
-*/
 
   print<<<EOS
 메모:<input type='text' name='memo' size='20' value='{$form['memo']}'
@@ -1241,46 +1227,6 @@ EOS;
 <label><input type='checkbox' name='fd16' {$fck[16]}>DRM사용</label>
 </div>
 EOS;
-
-  $f = $form;
-  unset($f['dept']);
-  unset($f['subnet']);
-  $f['mode'] = 'search';
-  $f['fd03'] = $f['fd06'] = $f['fd07'] = $f['fd09'] = $f['fd10'] = 'on';
-  $qs = Qstr($f);
-
-  $depts = get_depts_list();
-  sort($depts);
-  $n = count($depts);
-  $s = array();
-  $html2 = '';
-  for ($i = 0; $i < $n; $i++) {
-    $dept = $depts[$i];
-    if ($dept == '') continue;
-    $str = "<a href='$env[self]$qs&dept=$dept'>$dept</a>";
-    $s[$dept] = $str;
-    if ($html2) $html2 .= ', ';
-    if ($i>0 && $i % 15 == 0) { $html2 .= "<br>"; }
-    $html2 .= $str;
-  }
-
-  $f = $form;
-  unset($f['subnet']);
-  unset($f['dept']);
-  $f['mode'] = 'search';
-  $f['fd03'] = $f['fd06'] = $f['fd07'] = $f['fd09'] = 'on';
-  $qs = Qstr($f);
-
-  $nets = $conf['subnets'];
-  $n = array();
-  $l = count($nets);
-  for ($i = 0; $i < $l; $i++) {
-    $net = $nets[$i];
-    $str = "<a href='$env[self]$qs&subnet=$net'>$net</a>";
-    $n[$net] = $str;
-  }
-
-  include("inc.home1.php");
 
   print<<<EOS
  </td>

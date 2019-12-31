@@ -989,4 +989,86 @@ function get_form_info($prefix='key', $frm='') {
   return $info;
 }
 
+
+# list($table_form_open, $table_form_close)
+#   = table_oc_form('mmdata', 'form2', $env['self'], 'post', 'maindata', $table_attr='', $encmulti=false);
+# print $table_form_open; # {{
+# print $table_form_close; # }}
+# list($table_open, $table_close) = table_oc_form('mmdata', '', '', '', 'maindata');
+# print $table_open; # {{
+# print $table_close; # }}
+function table_oc_form($class='', $fn='', $action='', $method='', $id='', $table_attr='', $encmulti=false) {
+
+  // 다운로드 모드이면 자동으로 border='1' 속성을 넣음
+  global $download_mode;
+  if ($download_mode) $table_attr .= " border='1'";
+  if ($encmulti) $e = " enctype='multipart/form-data'"; else $e = '';
+
+  $open = '';
+  $open .= "<table class='$class' id='$id' $table_attr>";
+  if ($fn) $open .= "<form name='$fn' action='$action' method='$method'$e>";
+
+  $close = '';
+  if ($fn) $close .= "</form>";
+  $close .= "</table>";
+
+  return array($open, $close);
+}
+
+# list($table_open, $table_close) = table_oc_form('mmdata', '', '', '', 'maindata');
+# print $table_open; # {{
+# print table_head_general('번호,이름,교회,부서,상태');
+# $cls = array(); $dat = array();
+# $cls[] = ''; $dat[] = '번호';
+# print table_data_general($dat, $cls, $include_tr_tag=true, $th=false);
+# print $table_close; # }}
+
+//print table_head_general(array('번호','차량번호','모델','색상','메모'));
+//print table_head_general('번호:c1,차량번호:c1,모델,색상,메모');
+function table_head_general($titles, $include_tr_tag=true) {
+  global $form;
+
+  if (is_array($titles)) {
+    $arr = $titles;
+  } else {
+    $arr = preg_split("/,/", $titles);
+  }
+
+  $html = '';
+  if ($include_tr_tag) $html .= "<thead><tr>";
+  foreach ($arr as $t) {
+    list($t1, $t2) = preg_split("/:/", $t);
+    if ($t2) $attr = " class='$t2'"; else $attr = '';
+    if ($form['download']) { // 다운로드 모드일때..
+      $html .= download_th($t1, true);
+    } else {
+      $html .= "<th nowrap$attr>$t1</th>";
+    }
+  }
+  if ($include_tr_tag) $html .= "</tr></thead>";
+  return $html;
+}
+
+
+//print table_data_general(array('번호','차량번호','모델','색상','메모'), $classes);
+# $cls = []; $dat = [];
+# $cls[] = ''; $dat[] = $cnt;
+# print table_data_general($dat, $cls, $include_tr_tag=true, $th=false);
+function table_data_general($data, $classes=null, $include_tr_tag=true, $th=false) {
+  if ($include_tr_tag) $html = "<tr>"; else $html = "";
+
+  $tag = 'td';
+  if ($th) $tag = 'th';
+
+  $idx = 0;
+  foreach ($data as $t) {
+    $attr = " class='{$classes[$idx]}'";
+    $html .= "<$tag nowrap$attr>$t</td>";
+    $idx++;
+  }
+  if ($include_tr_tag) $html .= "</tr>";
+  return $html;
+}
+
+
 ?>

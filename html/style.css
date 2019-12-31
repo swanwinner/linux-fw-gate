@@ -75,8 +75,8 @@ p.warn { margin:0 0 0 0px; padding-left:16px;
 
 /* mm 데이터 테이블 */
 table.mmdata { border-collapse: collapse; }
-table.mmdata th { padding:3 5 3 5; background-color:#eeeeee; }
-table.mmdata td { padding:3 5 3 5; text-align:center; }
+table.mmdata th { padding:3px 5px 3px 5px; border:1px #999 solid; background-color:#eeeeee; }
+table.mmdata td { padding:3px 5px 3px 5px; border:1px #999 solid; text-align:center; }
 table.mmdata th.nr { white-space:nowrap; }
 table.mmdata td.nr { white-space:nowrap; }
 table.mmdata td.r { text-align:right; }
@@ -89,8 +89,6 @@ table.mmdata th.c2{ background-color:#ffcccc; }
 table.mmdata td.c2{ background-color:#ffeeee; }
 table.mmdata th.c3{ background-color:#ccffcc; }
 table.mmdata td.c3{ background-color:#eeffee; }
-
-
 
 table.main { border:0px solid red; border-collapse:collapse; }
 table.main th, table.main td { border:1px solid #999; padding:5px 5px 5px 5px; }

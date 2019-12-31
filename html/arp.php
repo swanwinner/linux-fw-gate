@@ -1,7 +1,7 @@
 <?php
 
-  include("path.php");
-  include("$env[prefix]/inc/common.php");
+  include_once("path.php");
+  include_once("$env[prefix]/inc/common.php");
 
 ### {{{
 function _get_company($company, $mac6) {
@@ -37,9 +37,7 @@ function _hiddenframe($debug, $name='hiddenframe', $w=600, $h=600) {
 
 ### {{{
 if ($mode == 'arpupdate') {
-  //print_r($form);
   $mac = $form['mac'];
-  //print($mac);
 
   $url = "http://standards.ieee.org/cgi-bin/ouisearch?$mac";
   $cont = file_get_contents($url);
@@ -78,22 +76,10 @@ EOS;
 EOS;
 
   ParagraphTitle('ARP 캐시 테이블', 1);
-  print<<<EOS
-<table class='main'>
-<tr>
-<th>번호</th>
-<th>IP</th>
-<th>MAC</th>
-<th>제조사</th>
-<th>차단여부</th>
-<th>IP검색</th>
-<th>MAC검색</th>
-<th>부서</th>
-<th>이름</th>
-<th>IP구분</th>
-<th>장비분류</th>
-</tr>
-EOS;
+
+  list($table_open, $table_close) = table_oc_form('mmdata', '', '', '', 'maindata');
+  print $table_open; # {{
+  print table_head_general('번호,IP,MAC,제조사,차단여부,IP검색,MAC검색,부서,이름,IP구분,장비분류');
 
   $list = get_arp_statue_from_file();
   $n = count($list);
@@ -129,7 +115,6 @@ EOS;
   //print_r($dup_mac_list);
   //print_r($dup_ip_list);
   //print_r($ip_list);
-
 
   $cnt = 0;
   for ($i = 0; $i < $n; $i++) {
@@ -203,10 +188,6 @@ EOS;
       else $str = "유동";
       $staticip_s = $str;
 
-#     $company = $row['company'];
-#     $mac6 = preg_replace("/:/", "", substr($mac, 0, 8));
-#     $company = _get_company($company, $mac6);
-
       $company = $row['company'];
       $mac6 = preg_replace("/:/", "", substr($mac, 0, 8));
       $company=<<<EOS
@@ -215,27 +196,29 @@ EOS;
 $company
 EOS;
 
-      print<<<EOS
-<tr>
-<td class='a'>$cnt</td>
-<td class='a'>$ip_s</td>
-<td class='a'>$mac_s</td>
-<td class='a'>$company</td>
-<td class='c'>$bflag_s</td>
-<td class='c'><a href="home.php?mode=search&ip=$ip&ipmatch=1">($mc1)</a></td>
-<td class='c'><a href="home.php?mode=search&mac=$mac">($mc2)</a></td>
-<td>$row[dept]$dup</td>
-<td>$row[name]$dup</td>
-<td class='c'>$staticip_s</td>
-<td class='c'>$row[dtype]</td>
-</tr>
-EOS;
+      $cls = array(); $dat = array();
+      $cls[] = ''; $dat[] = $cnt;
+      $cls[] = 'l'; $dat[] = $ip_s;
+      $cls[] = 'l'; $dat[] = $mac_s;
+      $cls[] = 'l'; $dat[] = $company;
+      $cls[] = ''; $dat[] = $bflag_s;
+
+      $s = "<a href='home.php?mode=search&ip=$ip&ipmatch=1'>($mc1)</a>";
+      $cls[] = ''; $dat[] = $s;
+      $s = "<a href='home.php?mode=search&mac=$mac'>($mc2)</a>";
+      $cls[] = ''; $dat[] = $s;
+      $s = "$row[dept]$dup";
+      $cls[] = ''; $dat[] = $s;
+      $s = "$row[name]$dup";
+      $cls[] = ''; $dat[] = $s;
+      $cls[] = ''; $dat[] = $staticip_s;
+      $cls[] = ''; $dat[] = $row['dtype'];
+
+      print table_data_general($dat, $cls, $include_tr_tag=true, $th=false);
     }
   }
+  print $table_close; # }}
  
-  print<<<EOS
-</table>
-EOS;
 
   AdminPageTail();
   exit;
