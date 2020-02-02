@@ -1,35 +1,32 @@
 <?php
 
-  include("path.php");
-  include("$env[prefix]/inc/common.php");
+  include_once("path.php");
+  include_once("$env[prefix]/inc/common.php");
+  include_once("$env[prefix]/inc/class.checkbox_multi2.php");
+  include_once("$env[prefix]/inc/class.pager.php");
 
   $net_subnets = $conf['subnets'];
   $net_subnet_title = $conf['subnet_title'];
 
   $netclass = $conf['net_class'];
 
+$sort_info = array(
+  1 => array('i.ip3, i.ip4           ', '::기본::',1),
+  2 => array('i.ip3, i.ip4           ', 'IP주소',0),
+  3 => array('i.realmac              ', 'MAC주소',0),
+  4 => array('i.name, ip3, ip4       ', '사용자',0),
+  5 => array('i.udate DESC, ip3, ip4 ', '마지막발견(최근)',0),
+  6 => array('i.udate, ip3, ip4      ', '마지막발견(오래됨)',0),
+  7 => array('i.idate DESC           ', '최근변경',0),
+  8 => array('i.checkStar DESC       ', '별표 표시',0),
+  9 => array('i.point DESC           ', '점수',0),
+);
+
+
 ### {{{
-
-function getHumanTime($s) {
-  //$unit = array('D'=>' days','H'=>' hours','M'=>' mins','S'=>' secs');
-  $unit = array('D'=>'일','H'=>'시간','M'=>'분','S'=>'초');
-
-  $m = $s / 60;
-  $h = $s / 3600;
-  $d = $s / 86400;
-  if ($m > 1) {
-    if ($h > 1) {
-      if ($d > 1) {
-        return (int)$d.$unit['D'];
-      } else {
-        return (int)$h.$unit['H'];
-      }
-    } else {
-      return (int)$m.$unit['M'];
-    }
-  } else {
-    return (int)$s.$unit['S'];
-  }
+function _debug($o) {
+  global $form;
+  if ($form['debug']) dd($o);
 }
 
 
@@ -43,45 +40,11 @@ function _mktime_date_string($str) {
   return mktime($h,$i,$s,$m,$d,$y);
 }
 
-function _button_box() {
-  $len = func_num_args();
-  $args = func_get_args();
-  $html = "<table border='0'><tr>";
-  for ($i = 0; $i < $len; $i++) {
-    $btn = $args[$i];
-    $html.="<td>";
-    $html.=$btn;
-    $html.="</td>";
-  }
-  $html.="</tr></table>";
-  return $html;
-}
-
-function _get_cb_list() {
-  global $form;
-  $f = $form;
-  $keys = array_keys($f);
-  $l = count($keys);
-
-  $ids = array();
-  for ($i = 0; $i < $l; $i++) {
-    $key = $keys[$i];
-    list($a, $b) = explode('_', $key, 2);
-    if ($a != 'cb') continue;
-    if (!$f[$key]) continue;
-    $id = $b;
-    $ids[] = $id;
-  }
-  return $ids;
-}
-
-
 function _dd($msg) {
        if (is_string($msg)) print($msg);
   else if (is_array($msg)) { print("<pre>"); print_r($msg); print("</pre>"); }
   else print_r($msg);
 }
-
 
 function option_bcode($preset) {
   global $conf;
@@ -132,7 +95,6 @@ function _setstar(id,imgid) {
       var response = xmlHttp.responseText;
       //alert(response);
       //eval(response);
-
       if (toset) {
         img.src = '$src_on';
       } else {
@@ -147,28 +109,6 @@ function _setstar(id,imgid) {
 </script>
 EOS;
   return $html;
-}
-
-function _option_subnet($preset) {
-  global $conf;
-
-  $net_subnets = $conf['subnets'];
-
-  $netclass = $conf['net_class'];
-
-  $nets = $net_subnets;
-  $n = count($nets);
-  $opts = "<option value=''>::전체::</option>";
-  for ($i = 0; $i < $n; $i++) {
-    $net = $nets[$i];
-
-    $title = $conf['subnet_title'][$net];
-
-    if ($preset == $net) $sel = " selected"; else $sel = '';
-    $opts .= "<option value='$net'$sel>$netclass.$net.0/24 $title</option>";
-  }
-
-  return $opts;
 }
 
 function _save_points($id, $points, &$sum) {
@@ -200,8 +140,6 @@ function _save_points($id, $points, &$sum) {
 // dd($qry); exit;
 
 }
-
-
 ### }}}
 
 
@@ -438,7 +376,8 @@ EOS;
   if ($mode2 == '0') $sflag = '0';
   else $sflag = '1';
 
-  $ids = _get_cb_list();
+  $ids = get_checked_list($prefix='cb');
+  //$ids = _get_cb_list();
   _dd($ids);
 
   $len = count($ids);
@@ -458,7 +397,8 @@ EOS;
 
 } else if ($mode == 'resetpoint') {
 
-  $ids = _get_cb_list();
+  $ids = get_checked_list($prefix='cb');
+  //$ids = _get_cb_list();
   //_dd($ids);
 
   $len = count($ids);
@@ -968,48 +908,9 @@ if ($mode == 'setstar') {
   $ret = db_query($qry);
   exit;
 }
-
 ### }}}
 
-
   AdminPageHead();
-
-  print<<<EOS
-<style>
-table.main { border:0px solid red; border-collapse:collapse; }
-table.main th, table.main td { border:1px solid #999; padding:2px 2px 2px 2px; }
-table.main th { background-color:#eeeeee; font-weight:bold; text-align:center; }
-table.main td.c { text-align:center; }
-table.main td.r { text-align:right; }
-table.main td.l { text-align:left; }
-table.main td.ls { text-align:left; font-size:5pt; }
-</style>
-EOS;
-
-  $depts = get_depts_list();
-
-  $f_dept = $form['dept'];
-  $opts = "<option value=''>::전체부서::</option>";
-  $n = count($depts);
-  for ($i = 0; $i < $n; $i++) {
-    $dept = $depts[$i];
-    if ($f_dept == $dept) $sel = " selected"; else $sel = '';
-    $opts .= "<option value='$dept'$sel>$dept</option>";
-  }
-  $dept_opts = $opts;
-
-
-  $sort = $form['sort'];
-  $vs = array('', '1','2','3','4','5','6','7','8','9');
-  $ds = array('::기본::','IP','MAC','사용자','마지막발견(최근)','마지막발견(이전)','최근변경','별표 표시','DRM시간','점수');
-  $n = count($vs);
-  $opts = "";
-  for ($i = 0; $i < $n; $i++) {
-    $v = $vs[$i]; $d = $ds[$i];
-    if ($sort == $v) $sel = " selected"; else $sel = '';
-    $opts .= "<option value='$v'$sel>$d</option>";
-  }
-  $sort_opts = $opts;
 
   $f_name = $form['name'];
   $f_memo = $form['memo'];
@@ -1047,51 +948,38 @@ EOS;
   $staticip_opts = $opts;
 
 
-
-  $f_wireless = $form['wireless'];
-  $vs = array('', '0','1');
-  $ds = array('::전체::','유선만','무선만');
-  $n = count($vs);
-  $opts = "";
-  for ($i = 0; $i < $n; $i++) {
-    $v = $vs[$i]; $d = $ds[$i];
-    if ($f_wireless == $v) $sel = " selected"; else $sel = '';
-    $opts .= "<option value='$v'$sel>$d</option>";
-  }
-  $wireless_opts = $opts;
-
-  $f_dtype = $form['dtype'];
-  $devlist = $conf['dtype'];
-  $opts = "<option value=''>::전체::</option>";
-  $opts .= "<option value='null'>::미입력::</option>";
-  $n = count($devlist);
-  for ($i = 0; $i < $n; $i++) {
-    $dev = $devlist[$i];
-    if ($f_dtype == $dev) $sel = " selected"; else $sel = '';
-    $opts .= "<option value='$dev'$sel>$dev</option>";
-  }
-  $dtype_opts = $opts;
-
   print<<<EOS
 <table class='main'>
-<form name='form' action='$env[self]' method='post'>
+<form name='search_form' action='$env[self]' method='post'>
 <tr>
 <td>
 <input type='button' value='확인' style='width:50px;height:50px;' onclick='sf_1()'>
 <input type='hidden' name='mode' value='search'>
+<input type='hidden' name='page' value='{$form['page']}'>
  </td>
  <td>
 EOS;
 
-  print<<<EOS
-부서:<select name='dept'>$dept_opts</select>
-EOS;
+  $depts = get_depts_list();
+  $list = array('=전체=:all');
+  foreach ($depts as $d) $list[] = $d;
+  $preset = $form['dept']; if ($preset=='') $preset = 'all';
+  $opt = option_general($list, $preset);
+  $html = select_element('dept', $opt);
+  print label_fe('부서', $html);
 
-  $preset = $form['subnet'];
-  $subnet_opts = _option_subnet($preset);
-  print<<<EOS
-서브넷:<select name='subnet'>$subnet_opts</select>
-EOS;
+  $net_subnets = $conf['subnets'];
+  $netclass = $conf['net_class'];
+  $list = array('=전체=:all');
+  foreach ($net_subnets as $n) {
+    $title = $conf['subnet_title'][$n];
+    $s = "$netclass.$n - $title:$n";
+    $list[] = $s;
+  }
+  $preset = $form['subnet']; if ($preset=='') $preset = 'all';
+  $opt = option_general($list, $preset);
+  $html = select_element('subnet', $opt);
+  print label_fe('서브넷', $html);
 
   print<<<EOS
 사용자:<input type='text' name='name' size='10' value='{$form['name']}'
@@ -1168,65 +1056,58 @@ EOS;
 보안점검 시작:<select name='sflag2'>$sflag2_opts</select>
 EOS;
 
+  $html = sort_select($sort_info, $fn='sort');
+  print label_fe('정렬', $html);
 
-  print<<<EOS
-정렬:<select name='sort'>$sort_opts</select>
-EOS;
+  $list = array('=전체=:all','유선:1','무선:2');
+  $preset = $form['wireless']; if ($preset=='') $preset = 'all';
+  $opt = option_general($list, $preset);
+  $html = select_element('wireless', $opt);
+  print label_fe('유무선', $html);
 
-  print<<<EOS
-유무선:<select name='wireless'>$wireless_opts</select>
-EOS;
-
+  $f_dtype = $form['dtype'];
+  $devlist = $conf['dtype'];
+  $opts = "<option value=''>::전체::</option>";
+  $opts .= "<option value='null'>::미입력::</option>";
+  $n = count($devlist);
+  for ($i = 0; $i < $n; $i++) {
+    $dev = $devlist[$i];
+    if ($f_dtype == $dev) $sel = " selected"; else $sel = '';
+    $opts .= "<option value='$dev'$sel>$dev</option>";
+  }
+  $dtype_opts = $opts;
   print<<<EOS
 장비분류:<select name='dtype'>$dtype_opts</select>
 EOS;
 
+  $ipp = get_ipp(20,$min=10,$max=500);
+  $opts = option_ipp($ipp, array(10,20,50,100,200,500));
+  $html = select_element('ipp', $opts).'건';
+  print label_fe('출력', $html);
+
   $fck = array(); // field check '' or ' checked'
-  $flag = false;
-  for ($i = 0; $i <= 50; $i++) {
-    $key = sprintf("fd%02d", $i); // fd01 fd02 fd03 ...
-    $v = $form[$key];
-    if ($v != '') $fck[$i] = ' checked';
-    else $fck[$i] = '';
-    if ($v != '') $flag = true;
-  }
-  if ($flag == false) { //기본값
-    $chklist = array(
-       2,  //마지막발견
-       //3,  //실제MAC
-       6,  //부서
-       7,  //사용자
-       9,  //메모
-       11, //장비분류
-    );
-    for ($i = 0; $i < count($chklist); $i++) {
-      $v = $chklist[$i];
-      $fck[$v] = ' checked';
-      $key = sprintf("fd%02d", $v);
-      $form[$key] = 'on';
-    }
-  }
-
-
+  fck_init($fck, $defaults='2,6,7,9,11', $max=50);
   print<<<EOS
 <div>
-<label><input type='checkbox' name='fd01' {$fck[1]}>ARP-MAC</label>
-<label><input type='checkbox' name='fd02' {$fck[2]}>마지막 발견</label>
-<label><input type='checkbox' name='fd03' {$fck[3]}>실제MAC</label>
-<label><input type='checkbox' name='fd04' {$fck[4]}>제조사</label>
-<label><input type='checkbox' name='fd05' {$fck[5]}>입력/변경일시</label>
-<label><input type='checkbox' name='fd06' {$fck[6]}>부서</label>
-<label><input type='checkbox' name='fd07' {$fck[7]}>사용자</label>
-<label><input type='checkbox' name='fd09' {$fck[9]}>메모</label>
+<label><input type='checkbox' name='fd1' {$fck[1]}>ARP-MAC</label>
+<label><input type='checkbox' name='fd2' {$fck[2]}>마지막 발견</label>
+<label><input type='checkbox' name='fd3' {$fck[3]}>실제MAC</label>
+<label><input type='checkbox' name='fd4' {$fck[4]}>제조사</label>
+<label><input type='checkbox' name='fd5' {$fck[5]}>입력/변경일시</label>
+<label><input type='checkbox' name='fd6' {$fck[6]}>부서</label>
+<label><input type='checkbox' name='fd7' {$fck[7]}>사용자</label>
+<label><input type='checkbox' name='fd9' {$fck[9]}>메모</label>
 <label><input type='checkbox' name='fd10' {$fck[10]}>유무선</label>
 <label><input type='checkbox' name='fd11' {$fck[11]}>장비분류</label>
 <label><input type='checkbox' name='fd13' {$fck[13]}>OS종류</label>
-<label><input type='checkbox' name='fd12' {$fck[12]}>사유</label>
-<label><input type='checkbox' name='fd14' {$fck[14]}>DRM모니터</label>
+<label><input type='checkbox' name='fd12' {$fck[12]}>차단사유</label>
 <label><input type='checkbox' name='fd15' {$fck[15]}>점수</label>
 <label><input type='checkbox' name='fd16' {$fck[16]}>DRM사용</label>
 </div>
 EOS;
+
+  $cb = checkbox_general('debug', $form['debug'], '디버깅');
+  print label_fe('옵션', $cb);
 
   print<<<EOS
  </td>
@@ -1235,32 +1116,26 @@ EOS;
 </table>
 
 <script>
-// 이름 입력란에서 엔터를 눌렀을 때
 function keypress_text() {
   if (event.keyCode != 13) return;
   sf_1();
 }
-
 function sf_1() {
-  var form = document.form;
+  var form = document.search_form;
   form.submit();
 }
 </script>
 EOS;
 
-
-if ($mode != 'search') {
-  AdminPageTail();
-  exit;
-}
-
+if ($mode != 'search') { AdminPageTail(); exit; }
+  _debug($form);
 
   $b1 = button_general('선택항목 삭제', 0, "deleteBtn()", 'background-color:yellow;', $class='');
-  $b4 = button_general('전체선택', 0, "selectAll()", $style='', $class='');
+  $b4 = button_general('전체선택', 0, "select_all()", $style='', $class='');
   $b2 = button_general('보안점검 시작', 0, "setsflagBtn()", $style='', $class='');
   $b3 = button_general('보안점검 미시작', 0, "setsflagBtn(0)", $style='', $class='');
   $b5 = button_general('점수초기화', 0, "resetPoint()", $style='', $class='');
-  $btns = _button_box($b1, $b4, $b2, $b3, $b5);
+  $btns = button_box($b1, $b4, $b2, $b3, $b5);
 
   print<<<EOS
 {$conf['html_notice1']}
@@ -1269,107 +1144,41 @@ $btns
 
 <script>
 var  page_loaded = false;
-function _mover(tr, mouseover,id) {
-  // if page is not loaded yet, then return doing nothing
-  if (!page_loaded) return;
-
-  var cbid = "cb_"+id;
-  var cb = document.getElementById(cbid);
-  if (mouseover) {
-    tr.style.background = "#ffeeee"; //red
-  } else {
-    if (cb.checked) tr.style.backgroundColor='#ddffdd'; //green
-    else tr.style.background = "#ffffff"; //white
-  }
-}
 </script>
 EOS;
 
-  $fields = array();
-
-  $fields[] = '선택';
-  $fields[] = '번호';
-  $fields[] = '표시';
-  $fields[] = 'IP';
-  $fields[] = 'IP구분';
-
-  if ($form['fd01']) $fields[] = 'ARP-MAC';
-  if ($form['fd02']) $fields[] = '마지막 발견';
-  if ($form['fd03']) $fields[] = '실제MAC';
-  if ($form['fd04']) $fields[] = '제조사';
-  if ($form['fd05']) $fields[] = '입력/변경일시';
-  if ($form['fd06']) $fields[] = '부서';
-  if ($form['fd07']) $fields[] = '사용자';
-  if ($form['fd09']) $fields[] = '메모';
-  if ($form['fd10']) $fields[] = '유무선';
-  if ($form['fd11']) $fields[] = '장비분류';
-  if ($form['fd13']) $fields[] = 'OS종류';
-
-  $fields[] = '차단';
-  if ($form['fd12']) $fields[] = '사유';
-  if ($form['fd14']) {
-    $fields[] = 'DRM시간';
-    $fields[] = 'DRM서버';
-    $fields[] = 'DRM포트';
-  }
-  if ($form['fd15']) $fields[] = '점수';
-  if ($form['fd16']) {
-    $fields[] = 'DRM사용';
-    $fields[] = 'DRM사유';
-  }
-  $fields[] = '보안<br>점검<br>대상';
-  $fields[] = '보안<br>점검<br>시작';
-  $fields[] = '수정';
-  $fields[] = '삭제';
-
-  print<<<EOS
-<table class='main'>
-<form name='form2' method='post' action='$env[self]'>
-<input type='hidden' name='mode' value=''>
-<input type='hidden' name='mode2' value=''>
-<tr>
-EOS;
-  for ($i = 0; $i < count($fields); $i++) {
-    $str = $fields[$i];
-    print<<<EOS
-<th nowrap>$str</th>
-EOS;
-  }
-  print<<<EOS
-</tr>
-EOS;
-
+  $hdr = "번호,선택";
+  $hdr .= ",표시,IP,IP구분";
+  if ($form['fd1']) $hdr .= ',ARP-MAC';
+  if ($form['fd2']) $hdr .= ',마지막 발견';
+  if ($form['fd3']) $hdr .= ',실제MAC';
+  if ($form['fd4']) $hdr .= ',제조사';
+  if ($form['fd5']) $hdr .= ',입력/변경일시';
+  if ($form['fd6']) $hdr .= ',부서';
+  if ($form['fd7']) $hdr .= ',사용자';
+  if ($form['fd9']) $hdr .= ',메모';
+  if ($form['fd10']) $hdr .= ',유무선';
+  if ($form['fd11']) $hdr .= ',장비분류';
+  if ($form['fd13']) $hdr .= ',OS종류';
+  $hdr .= ',차단';
+  if ($form['fd12']) $hdr .= ',차단사유';
+  if ($form['fd15']) $hdr .= ',점수';
+  if ($form['fd16']) { $hdr .= ',DRM사용,DRM사유'; }
+  $hdr .= ',보안<br>점검<br>대상';
+  $hdr .= ',보안<br>점검<br>시작';
+  $hdr .= ',수정,삭제';
 
   $w = array('1');
+  sql_where_match($w, 'subnet', 'i.ip3');
+  sql_where_match($w, 'dept', 'i.dept');
+  sql_where_like($w, 'name', 'i.name');
+  sql_where_like($w, 'memo', 'i.memo');
+  sql_where_like($w, 'ostype', 'i.ostype');
 
-  $f_subnet = $form['subnet'];
-  if ($f_subnet != '') {
-    $w[] = "i.ip LIKE '%.$f_subnet.%'";
-  }
-
-  $f_dept = $form['dept'];
-  if ($f_dept != '') {
-    $w[] = "i.dept='$f_dept'";
-  }
-
-  $f_name = $form['name'];
-  if ($f_name != '') {
-    $w[] = "i.name LIKE '%$f_name%'";
-  }
-
-  $v = $form['memo'];
-  if ($v) $w[] = "i.memo LIKE '%$v%'";
-
-  $v = $form['ostype'];
-  if ($v) $w[] = "i.ostype LIKE '%$v%'";
-
-  $f_dtype = $form['dtype'];
-  if ($f_dtype != '') {
-    if ($f_dtype == 'null') { // 미입력
-      $w[] = "(i.dtype='' or i.dtype is null)";
-    } else {
-      $w[] = "(i.dtype='$f_dtype')";
-    }
+  $v = $form['dtype'];
+  if ($v != '') {
+    if ($v == 'null') $w[] = "(i.dtype='' or i.dtype is null)"; // 미입력
+    else sql_where_match($w, 'dtype', 'i.dept');
   }
 
   $f_ip = $form['ip'];
@@ -1382,274 +1191,183 @@ EOS;
     }
   }
 
-  $f_mac = $form['mac'];
-  if ($f_mac != '') {
-    $w[] = "(i.mac LIKE '%$f_mac%')";
-  }
+  sql_where_like($w, 'mac', 'i.mac');
+  if ($form['macempty']) $w[] = "(i.mac is null OR i.mac='')";
+  if ($form['bflag']) $w[] = "(i.bflag='1')";
 
-  $f_macempty = $form['macempty'];
-  if ($f_macempty != '') {
-    $w[] = "(i.mac is null OR i.mac='')";
-  }
+  sql_where_match($w, 'staticip', 'i.staticip');
+  if ($form['sflag']) $w[] = "(i.sflag='1')";
+  if ($form['sflag2']) $w[] = "(i.sec_chk_sflag='1')";
 
-  $f_bflag = $form['bflag'];
-  if ($f_bflag != '') {
-    $w[] = "(i.bflag='$f_bflag')";
-  }
-
-  $f_staticip = $form['staticip'];
-  if ($f_staticip != '') {
-    $w[] = "(i.staticip='$f_staticip')";
-  }
-
-  $f_sflag = $form['sflag'];
-  if ($f_sflag != '') $w[] = "(i.sflag='$f_sflag')";
-
-  $v = $form['sflag2'];
-  if ($v != '') $w[] = "(i.sec_chk_sflag='$v')";
-
-
-  $f_wireless = $form['wireless'];
-  if ($f_wireless != '') {
-    $w[] = "(i.wireless='$f_wireless')";
-  }
-
-  //dd($w);
+  _debug($w);
   $sql_where = " WHERE ".join(" AND ", $w);
 
+  $sql_order = sort_order($sort_info, $fn='sort');
 
-
-  $sort = $form['sort'];
-       if ($sort == '1') $o = "i.ip3, i.ip4";
-  else if ($sort == '2') $o = "i.realmac";
-  else if ($sort == '3') $o = "i.name, ip3, ip4";
-  else if ($sort == '4') $o = "i.udate DESC, ip3, ip4";
-  else if ($sort == '5') $o = "i.udate, ip3, ip4";
-  else if ($sort == '6') $o = "i.idate DESC";
-  else if ($sort == '7') $o = "i.checkStar DESC";
-  else if ($sort == '8') $o = "i.drm_time DESC";
-  else if ($sort == '9') $o = "i.point DESC";
-  else                   $o = "i.udate, ip3, ip4";
-  $sql_order = " ORDER BY $o";
-
-
-  $qry1 = "SELECT i.*, p.point _point"
+  $sql_select = "SELECT i.*, p.point _point"
    .", CONCAT(SUBSTRING(realmac,1,2),'-',SUBSTRING(realmac,4,2),'-',SUBSTRING(realmac,7,2)) AS mac6"
    .", if(i.ds_usage_check=1, '사용', if(i.ds_usage_check=2,'미사용','')) _drm_use"
-   .", i.ds_no_use_cause _drm_cause"
-   ." FROM ipdb i"
-   ." LEFT JOIN points p ON i.mac=p.mac"
-   .$sql_where.$sql_order;
+   .", i.ds_no_use_cause _drm_cause";
 
-  $qry = "SELECT oui.company, A.*"
-   ." FROM ($qry1) A"
-   ." LEFT JOIN oui ON A.mac6=oui.mac6";
-//dd($qry);
+  $sql_from = " FROM ipdb i";
+  $sql_join = " LEFT JOIN points p ON i.mac=p.mac";
 
+  $ipp = get_ipp(20,$min=10,$max=500);
+  $cpgr = new pager();
+  $start = $cpgr->calc($sql_from, $sql_join, $sql_where, $ipp);
+  $html = $cpgr->get($formname='search_form', $innerhtml='');
+  print $html;
+
+if ($form['fd4']) {
+  $sql_join .= " LEFT JOIN oui ON i.mac6=oui.mac6";
+  $sql_select .= ", oui.company";
+# $qry = "SELECT oui.company, A.*"
+#  ." FROM ($qry1) A"
+#  ." LEFT JOIN oui ON A.mac6=oui.mac6";
+}
+
+  $qry = $sql_select.$sql_from.$sql_join.$sql_where.$sql_order;
+  if ($mode != 'download') $qry .= " LIMIT $start,$ipp";
+
+  _debug($qry);
   $ret = db_query($qry);
 
   $qs = rawurlencode($_SERVER['QUERY_STRING']);
 
-  $cbids = array();
+  $cbm = new checkbox_multi();
+  $cbm->setoption('화살표숨김');
+  $cbm->option('form', 'form2');
+  $cbm->option('select_count', 'select_count');
+  $cbm->option('selected_list', 'selected_list');
 
+  list($table_form_open, $table_form_close) = table_oc_form('mmdata', 'form2', $env['self'], 'post', 'maindata');
+  print $table_form_open; # {{
+  print table_head_general($hdr);
+  print("<input type='hidden' name='mode' value=''>");
+  print("<input type='hidden' name='mode2' value=''>");
+
+  $cbids = array();
   $cnt = 0;
   while ($row = db_fetch($ret)) {
     $cnt++;
-
     //dd($row);
-    $id = $row['id'];
+    $no = $id = $row['id'];
 
-    $fields = array();
-
+    $dat = array(); $cls = array();
 
     $cbids[] = $id;
-    $checkbox =<<<EOS
-<input type='checkbox' name='cb_$id' id='cb_$id' onclick="_click_cb('$id')">
-EOS;
-    $fields[] = array($checkbox, '');
-
-    $fields[] = array($cnt, "class='c'");
-
-
 
     $html = _star_check($row['checkStar'], $id);
-    $fields[] = array($html, '');
+    $cls[] = ''; $dat[] = $html;
 
-    // IP
     $ip = $row['ip'];
     $ipnow = $row['ipnow'];
-    //$ip3 = $row['ip3'];
-    //$ip4 = $row['ip4'];
     $ip_s = "$ip";
     if ($row['secondip']) { $ip_s .= "<br>($row[secondip])"; }
+    if ($ipnow) { if ($ip != $ipnow) $ip_s .= "<br>*$ipnow"; }
+    $cls[] = ''; $dat[] = $ip_s;
 
-    if ($ipnow) {
-      if ($ip != $ipnow) $ip_s .= "<br>*$ipnow";
-    }
-
-    $fields[] = array($ip_s, "class='c'");
-
-
-    $mac = $row['mac'];
-    if ($mac == '') {
-      $mac_s="";
-    } else {
-      $mac_s = $mac;
-      $qry2 = "select count(*) as count from ipdb where mac='$mac'";
-      $ret2 = db_query($qry2);
-      $row2 = db_fetch($ret2);
-      if ($row2['count'] >= 2) {
-        $mac_s .= "<font color='red'>(중복)</font>";
-      }
-    }
-
-
-    // IP구분
          if ($row['staticip']=='1') $str = "고정";
     else if ($row['staticip']=='0') $str = "유동";
-    $fields[] = array($str, "class=c");
+    else $str = '';
+    $cls[] = ''; $dat[] = $str;
 
-    if ($form['fd01']) { // ARP-MAC
-      $fields[] = array($mac_s, "class=l");
+    $mac = $row['mac'];
+    #if ($mac == '') {
+    #  $mac_s="";
+    #} else {
+    #  $mac_s = $mac;
+    #  $qry2 = "select count(*) as count from ipdb where mac='$mac'";
+    #  $ret2 = db_query($qry2);
+    #  $row2 = db_fetch($ret2);
+    #  if ($row2['count'] >= 2) {
+    #    $mac_s .= "<font color='red'>(중복)</font>";
+    #  }
+    #}
+    if ($form['fd1']) {
+      $cls[] = ''; $dat[] = $mac;
     }
 
-    if ($form['fd02']) { // 마지막 발견
+    if ($form['fd2']) { // 마지막 발견
       $udate = $row['udate'];
       $us = _mktime_date_string($udate);
       $now = time();
       $d = $now - $us;
       $ds = getHumanTime($d);
-      //$str = "$udate({$ds}전)";
       $str = "{$ds}전";
-      $fields[] = array($str, "class=c");
+      $cls[] = ''; $dat[] = $str;
     }
 
-    if ($form['fd03']) { // 실제MAC
+    if ($form['fd3']) { // 실제MAC
       $realmac = $row['realmac'];
       $realmac_s = $realmac;
-      if ($mac != $realmac) {
-        $realmac_s = "<font color=red>$realmac</font>";
-      }
-      $fields[] = array($realmac_s, "class=l");
+      if ($mac != $realmac) { $realmac_s = "<font color=red>$realmac</font>"; }
+      $cls[] = ''; $dat[] = $realmac_s;
     }
-
-    if ($form['fd04']) { // 제조사
-      $company = $row['company'];
-      $fields[] = array($company, "class=ls");
-    }
-
-    if ($form['fd05']) { // 입력/변경일시
-      $fields[] = array($row['idate'], "class=c");
-    }
-
-    if ($form['fd06']) { // 부서
-      $fields[] = array($row['dept'], "class=c");
-    }
-
-    if ($form['fd07']) { // 사용자
-      $fields[] = array($row['name'], "class=c");
-    }
-
-    if ($form['fd09']) { // 메모
-      $fields[] = array($row['memo'], "class=l");
-    }
-
-    if ($form['fd10']) { // 유무선
+    if ($form['fd4']) { $cls[] = ''; $dat[] = $row['company']; } // 제조사
+    if ($form['fd5']) { $cls[] = ''; $dat[] = $row['idate']; } // 입력/변경일시
+    if ($form['fd6']) { $cls[] = ''; $dat[] = $row['dept']; } // 부서
+    if ($form['fd7']) { $cls[] = 'l'; $dat[] = $row['name']; } // 사용자
+    if ($form['fd9']) { $cls[] = 'l'; $dat[] = $row['memo']; } // 메모
+    if ($form['fd10']) {
       if ($row['wireless']) $w = '무선'; else $w = '*유선';
-      $fields[] = array($w, "class=c");
+      $cls[] = ''; $dat[] = $w;
     }
+    if ($form['fd11']) { $cls[] = ''; $dat[] = $row['dtype']; } // 장비분류
+    if ($form['fd13']) { $cls[] = ''; $dat[] = $row['ostype']; } // OS종료
 
-    if ($form['fd11']) { // 장비분류
-      $fields[] = array($row['dtype'], "class=c");
-    }
-
-    if ($form['fd13']) { // OS종료
-      $fields[] = array($row['ostype'], "class=c");
-    }
-
-
-    //
     $bflag = $row['bflag'];
     if ($bflag) $bflag_s = '차단'; else $bflag_s = '-';
+    $cls[] = ''; $dat[] = $bflag_s;
 
-
-    //
-    $fields[] = array($bflag_s, " class='c'");
-
-    //
-    if ($form['fd12']) { // 사유
+    if ($form['fd12']) { // 차단사유
       $bflag = $row['bflag'];
       if ($bflag) $bcode = $row['bcode']; else $bcode = '';
-      $fields[] = array($bcode, " class='c'");
+      $cls[] = ''; $dat[] = $bcode;
     }
 
-    if ($form['fd14']) { // DRM사용
-      $fields[] = array($row['drm_time'], " class='c'");
-      $fields[] = array($row['drm_server'], " class='c'");
-      $fields[] = array($row['drm_port'], " class='c'");
-    }
-    if ($form['fd15']) { // 점수
-      $fields[] = array($row['_point'], " class='r'");
-    }
+    if ($form['fd15']) { $cls[] = ''; $dat[] = $row['_point']; } // 점수
     if ($form['fd16']) { // 문서보안 사용
-      $fields[] = array($row['_drm_use'], " class='c'");
-      $fields[] = array($row['_drm_cause'], " class='c'");
+    $cls[] = ''; $dat[] = $row['_drm_use'];
+    $cls[] = ''; $dat[] = $row['_drm_cause'];
     }
 
-    //
     $sflag = $row['sflag'];
     if ($sflag) $sflag_s = '<font color=blue>포함</font>';
     else $sflag_s = '<font color=red>제외</font>';
-    $fields[] = array($sflag_s, " class='c'");
+    $cls[] = ''; $dat[] = $sflag_s;
 
-    //
     $sflag2 = $row['sec_chk_sflag'];
     if ($sflag2) $sflag2_s = '<font color=blue>시작</font>';
     else $sflag2_s = '<font color=red>미시작</font>';
-    $fields[] = array($sflag2_s, " class='c'");
+    $cls[] = ''; $dat[] = $sflag2_s;
 
-    //
-    $str = <<<EOS
-<span onclick="_edit('$id',this)" style='cursor:pointer'>수정</span>
-EOS;
-    $fields[] = array($str, " class='c'");
+    $s = span_link2('수정', "_edit('$id', this)");
+    $cls[] = ''; $dat[] = $s;
 
-    //
-    $str =<<<EOS
-<span onclick="_delete('$id')" style='cursor:pointer'>삭제</span>
-EOS;
-    $fields[] = array($str, " class='c'");
+    $s = span_link2('삭제', "_delete('$id', this)");
+    $cls[] = ''; $dat[] = $s;
 
-    print<<<EOS
-<tr id='tr_$id'>
-EOS;
-    for ($i = 0; $i < count($fields); $i++) {
-      list($str,$attr) = $fields[$i];
-      print<<<EOS
-<td $attr>$str</td>
-EOS;
-    }
-    print<<<EOS
-</tr>
-EOS;
-
+    $tr = $cbm->get_tr($no);
+    $attr = $cbm->get_td_drag_attr($no);
+    $checkbox = $cbm->checkbox($no);
+    print("$tr");
+    print("<td $attr>$cnt</td>");
+    print("<td>$checkbox</td>");
+    print table_data_general($dat, $cls, false, false);
+    print("</tr>");
   }
+  print $table_form_close; # }}
+  print $cbm->get_script();
+  print $cbm->get_style();
 
-  print<<<EOS
-</form>
-</table>
-EOS;
-
-  print("<iframe name='hiddenframe' width=0 height=0 style='display:none;'></iframe>");
-# print("<iframe name='hiddenframe' width=500 height=200></iframe>");
-
+  if ($form['debug']) hiddenframe(1, 'hiddenframe', 600, 600);
+  else hiddenframe(0, 'hiddenframe', 600, 600);
 
   $cbids2 = join(',',$cbids);
   print<<<EOS
 <script>
-
 var cbids = [$cbids2];
-
 function _copy(str) {
   clipboardData.setData("Text", str);
   alert('클립보드에 복사되었습니다.');
@@ -1665,18 +1383,8 @@ function _click_cb(id) {
   else tr.style.backgroundColor='#ffffff'; //white
 }
 
-function _select_count() {
-  var count = 0;
-  for (var i = 0; i < cbids.length; i++) {
-    id = cbids[i];
-    var cb = eval("form2.cb_"+id);
-    if (cb.checked) count++;
-  }
-  return count;
-}
-
 function setsflagBtn(sflag) {
-  var c = _select_count();
+  var c = select_count();
   if (c == 0) { alert('선택한 것이 없습니다.'); return; }
   var msg = "선택항목 "+c+"건을 적용할까요?";
   if (!confirm(msg)) return;
@@ -1688,7 +1396,7 @@ function setsflagBtn(sflag) {
 }
 
 function resetPoint() {
-  var c = _select_count();
+  var c = select_count();
   if (c == 0) { alert('선택한 것이 없습니다.'); return; }
   var msg = "선택항목 "+c+"건을 적용할까요?";
   if (!confirm(msg)) return;
@@ -1698,29 +1406,8 @@ function resetPoint() {
   form2.submit();
 }
 
-
-// 전체선택
-var all_selected = false;
-function selectAll() {
-  var count = 0;
-
-  for (var i = 0; i < cbids.length; i++) {
-    id = cbids[i];
-    var cb = eval("form2.cb_"+id);
-    if (!all_selected) {
-      cb.checked = true;
-    } else {
-      cb.checked = false;
-    }
-    _click_cb(id);
-  }
-
-  if (!all_selected) all_selected = true;
-  else all_selected = false;
-}
-
 function deleteBtn() {
-  var c = _select_count();
+  var c = select_count();
   if (c == 0) {
     alert('선택한 것이 없습니다.'); return;
   }
@@ -1738,13 +1425,15 @@ function _edit(id,span) {
   var option = "width=700,height=600,scrollbars=1,resizable=1";
   open(url, '', option);
 }
-function _delete(id) {
+function _delete(id,span) {
+  span.style.backgroundColor = '#ff8888';
   if (!confirm('삭제할까요?')) return;
   hiddenframe.location = "$env[self]?mode=delete&id="+id;
 }
 
 function _onload() {
   page_loaded = true;
+  console.log("page loaded");
 }
 
 if (window.addEventListener) {

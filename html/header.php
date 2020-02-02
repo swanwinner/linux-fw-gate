@@ -73,6 +73,7 @@ body,input {  font-size: 12px; font-family: 굴림,돋움,verdana;
     <li><a href="/log.php">로그</a></li>
     <li><a href="/backup.php">백업</a></li>
     <li><a href="/secchk2.php">보안점검</a></li>
+    <li><a href="https://getbootstrap.com/docs/3.3/components/" target='_blank'>bootstrap 3.3</a></li>
   </ul>
 </li>
 <li><a class="navbar-brand" href="/home.php" target='_blank'>&nbsp;[+]</a></li></ul>
