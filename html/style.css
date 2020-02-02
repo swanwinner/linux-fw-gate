@@ -96,3 +96,23 @@ table.main th { background-color:#eeeeee; font-weight:bold; text-align:center; }
 table.main td.c { text-align:center; }
 table.main td.r { text-align:right; }
 
+
+table td.w50 { width:50px; }
+table td.w100 { width:100px; }
+table td.w150 { width:150px; }
+table td.w200 { width:200px; }
+table td.w300 { width:300px; }
+table td.w400 { width:400px; }
+table td.w500 { width:500px; }
+table.w100 { width:100%; }
+
+
+/* 검색 조건 입력폼에서 검색조건 제목 초록색 박스 */
+span.label { padding:2px 2px 2px 2px; color:#eee; background:#050;
+ border:#00c000 1px solid; height:20px; font-weight:bold; margin-left:5px; }
+span.label2 { padding:2px 2px 2px 2px; color:#ffffff; background:#800000;
+ border:#c00000 1px solid; height:20px; font-weight:bold; margin-left:5px; }
+label.red { color:#c00; }
+label.blue { color:#00f; }
+label.green { color:#0a0; }
+

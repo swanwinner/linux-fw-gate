@@ -1,7 +1,7 @@
 <?php
 
-  include("path.php");
-  include("$env[prefix]/inc/common.php");
+  include_once("path.php");
+  include_once("$env[prefix]/inc/common.php");
 
 ### {{{
 function _summary() {
@@ -103,7 +103,8 @@ if ($mode == 'save_point') {
 
   $a = array();
   $list = get_form_info($prefix='q');
-  //dd($list);
+  //dd($list); exit;
+
   $sum = 0;
   foreach ($list as $row) {
     $q = $row[0];
@@ -121,14 +122,14 @@ if ($mode == 'save_point') {
   $row = db_fetchone($qry);
   if ($row) {
     $qry = "UPDATE points $sql_set where mac='$mac'";
-    $ret = db_query($qry);
   } else {
     $qry = "insert into points $sql_set,mac='$mac'";
-    $ret = db_query($qry);
   }
+    $ret = db_query($qry);
 
   $url = "$env[self]?mac=$mac";
-  InformRedir('저장하였습니다.', $url);
+  Redirect($url);
+  //InformRedir('저장하였습니다.', $url);
   exit;
 }
 ### }}}
@@ -153,59 +154,14 @@ div.info p span.strong { font-size:15pt; font-weight:bold; }
 div.summary { background-color:#fff; border:5px solid #339933; width:600px; margin:3 3 3 3px; padding:3 3 3 3px; }
 div.summary p { margin:3 3 3 3px; font-size:12pt; font-weight:normal; line-height:150%; }
 
-.myButton {
-	-moz-box-shadow: 0px 1px 0px 0px #fff6af;
-	-webkit-box-shadow: 0px 1px 0px 0px #fff6af;
-	box-shadow: 0px 1px 0px 0px #fff6af;
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ffec64), color-stop(1, #ffab23));
-	background:-moz-linear-gradient(top, #ffec64 5%, #ffab23 100%);
-	background:-webkit-linear-gradient(top, #ffec64 5%, #ffab23 100%);
-	background:-o-linear-gradient(top, #ffec64 5%, #ffab23 100%);
-	background:-ms-linear-gradient(top, #ffec64 5%, #ffab23 100%);
-	background:linear-gradient(to bottom, #ffec64 5%, #ffab23 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffec64', endColorstr='#ffab23',GradientType=0);
-	background-color:#ffec64;
-	-moz-border-radius:6px;
-	-webkit-border-radius:6px;
-	border-radius:6px;
-	border:1px solid #ffaa22;
-	display:inline-block;
-	cursor:pointer;
-	color:#333333;
-	font-family:Arial;
-	font-size:15px;
-	font-weight:bold;
-	padding:6px 24px;
-	text-decoration:none;
-	text-shadow:0px 1px 0px #ffee66;
-}
-.myButton:hover {
-	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ffab23), color-stop(1, #ffec64));
-	background:-moz-linear-gradient(top, #ffab23 5%, #ffec64 100%);
-	background:-webkit-linear-gradient(top, #ffab23 5%, #ffec64 100%);
-	background:-o-linear-gradient(top, #ffab23 5%, #ffec64 100%);
-	background:-ms-linear-gradient(top, #ffab23 5%, #ffec64 100%);
-	background:linear-gradient(to bottom, #ffab23 5%, #ffec64 100%);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffab23', endColorstr='#ffec64',GradientType=0);
-	background-color:#ffab23;
-}
-.myButton:active {
-	position:relative;
-	top:1px;
-}
 
 </style>
 EOS;
 
 
-
   $f_mac = $form['mac'];
   if ($f_mac == '') {
-    $ip = current_ip();
-    $command = "/sbin/arp -n | grep '$ip '";
-    $lastline = exec($command, $out, $retval);
-    list($a,$b,$c,$d,$e) = preg_split("/ +/", $lastline);
-    $mac = $c;
+    $mac = my_mac_address();
   } else {
     $mac = $f_mac;
   }
@@ -216,14 +172,15 @@ EOS;
   $ipnow = $row['ipnow'];
 
   $mac_u = urlencode($mac);
-  $url = "/home.php?mode=search&mac=$mac_u&fd02=on&fd06=on&fd07=on&fd09=on&fd11=on";
+  $url = "/home.php?mode=search&mac=$mac_u";
 
   print<<<EOS
 <div class='info'>
 <p>현재 컴퓨터 정보:</p>
 <p>MAC: <span class='strong'>$mac</span>
 
-<a href="$url" class="myButton">검색</a>
+<input type='button' onclick="urlGo('$url')"
+ value='검색' style='width:100px; height:50px; background-color:#ff4;'>
 
 <p>부서: <span class='strong'>{$row['dept']}</span></p>
 <p>사용자: <span class='strong'>{$row['name']}</span></p>
@@ -237,111 +194,119 @@ EOS;
 
   //_summary();
 
-
  $data = array(
+
  array('no' => 1,
- 'title' => '1. DRM 설치여부',
- 'desc' => '센터 사무실 내 시험지 취급하는 PC 1대를 제외한 모든 PC는 DRM을 설치 (개인PC도 예외없음)',
- 'select' => array('설치'=>1, '미설치'=>0),
+ 'title' => 'DRM 설치 여부(10점)',
+ 'desc' => '합당한 사유로 총회와 사전 협의 된 경우 사유를 기록하고 감점하지 않음',
+ 'select' => array('양호'=>10, '불량'=>0),
  ),
+
  array('no'=> 2,
- 'title' => "2. 비보안 문서 작성 및 보유 여부",
- 'desc' => "센터내 DRM 설치 PC 사용시 반드시 DRM을 켜놓고 문서 작업을 할 것 (비보안문서는 모두 삭제하여 PC안에 없어야함, 비보안문서에 비번설정이나 압축 등의 방법으로 보관하는 것도 허용되지 않음) 보안마크가 없는 신천지 문서는 파쇄해야 함. (예외: 교적부, 신앙관리카드, 입교다짐서, 입학원서, 면접질문지, 센터시험지)",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "비보안 문서 작성·보유 여부(5점)",
+ 'desc' => "(전도지, 외부전송용, 영상자막용, 센터 시험지 파일 등 합당한 사유가 있을시 사유를 기록하고 감점하지 않음)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 3,
- 'title' => "3. 비보안 문서 출력여부",
- 'desc' => "비보안문서 작업 PC 1대를 제외한 모든 PC는 프린터와 연결이 되어있으면 안됨",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "비보안 문서 출력여부(5점)",
+ 'desc' => "(전도지, 센터시험지, 외부 배포용 등 합당한 사유가 있을시 사유를 기록하고 감점하지 않음)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 4,
- 'title' => "4. 신천지 문서 방치 여부",
- 'desc' => "보안마크가 찍힌 출력문서는 반드시 잠금장치가 되어 있는 캐비닛이나 서랍에 보관해야 함",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "신천지 문서 방치 여부(5점)",
+ 'desc' => "(사용 중이지 않은 문서는 잠금장치가 된 곳에 보관)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 5,
- 'title' => "5. 주요문서 파쇄 여부",
- 'desc' => "보안마크가 찍힌 신천지 문서는 반드시 파쇄기를 사용하여 파기",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "주요문서 파쇄 여부(5점)",
+ 'desc' => "(모든 보안문서는 파쇄기를 이용해 파쇄 해야 함)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 6,
- 'title' => "6. PC 로그인 암호 설정 여부",
- 'desc' => "윈도우 로그인 암호 설정시, 12000, 144000, 신천지 같은 단순 암호 사용금지",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "텔레그램 잠금 설정 여부(5점)",
+ 'desc' => "(텔레그램에 비밀번호 설정이 되어 있어야 함, 2단계 비밀번호 설정 권장)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 7,
- 'title' => "7. 화면보호기 암호",
- 'desc' => "화면보호기는 최대 10분으로 설정",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "로그인 암호 설정여부(10점)",
+ 'desc' => "(부팅, 윈도우 로그인 암호 둘 중 하나면 설정 해도 됨 144000, 0314, 19840314, 1200, 1234 등 의 비밀번호가 걸려있는 경우 감점. 영문+숫자+특수문자 조합으로 구성 할 것)",
+ 'select' => array('양호'=>10, '불량'=>0),
  ),
+
  array('no'=> 8,
- 'title' => "8. 백신 프로그램 설치 여부",
- 'desc' => "알약 설치",
- 'select' => array('설치'=>1, '미설치'=>0),
+ 'title' => "화면보호기 암호(5점)",
+ 'desc' => "(최대 10분까지 설정가능. 144000, 0314, 19840314, 1200, 1234 등 의 비밀번호가 걸려있는 경우 감점. 영문+숫자+특수문자 조합으로 구성 할 것)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 9,
- 'title' => "9. 바이러스 및 악성코드 감염 여부",
- 'desc' => "백신 전체검사 하여 바이러스가 검출되면 안됨",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "백신 프로그램 설치 여부(5점)",
+ 'desc' => "(바이러스, 악성코드 감염을 방지하는 백신프로그램 설치 여부, MSE, V3, 기타)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 10,
- 'title' => "10. 랜섬웨어 예방",
- 'desc' => "알약 내 환경설정 (랜섬웨어 차단항목 ON설정)",
- 'select' => array('설정'=>1, '미설정'=>0),
+ 'title' => "바이러스 및 악성코드 감염 여부(5점)",
+ 'desc' => "(컴퓨터 시스템을 망가뜨리고 성능을 저하시키는 바이러스 및 악성코드 감염 여부)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 11,
- 'title' => "11. 원격제어 프로그램설치 여부",
- 'desc' => "원격프로그램은 제어판에서 반드시 삭제할 것 (팀뷰어, 크레이지 리모트 등)",
- 'select' => array('미설치'=>1, '설치'=>0),
+ 'title' => "랜섬웨어 예방(5점)",
+ 'desc' => "(알약에서 설정, AppCheck 및 그에 상응하는 프로그램 설치 여부)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 12,
- 'title' => "12. 원격제어 차단설정 여부",
- 'desc' => "내컴퓨터 마우스 오른쪽 버튼 클릭후 -＞ 속성 마지막텝인 원격으로 들어가서 원격설정 해제",
- 'select' => array('설정해제'=>1, '설정'=>0),
+ 'title' => "원격제어 프로그램 설치 여부(5점)",
+ 'desc' => "(팀뷰어, 크레이지 리모트 등/단 허용 부서는 가능)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 13,
- 'title' => "13. P2P 프로그램 및 게임 설치 여부",
- 'desc' => "제어판에서 토렌트, P2P프로그램 삭제, 게임도 삭제",
- 'select' => array('미설치'=>1, '설치'=>0),
+ 'title' => "원격제어 차단설정 여부(5점)",
+ 'desc' => "(원격지원 연결 비허용 설정 여부/단 허용 부서는 가능)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 14,
- 'title' => "14. 비인가 파일 공유프로그램 설치 여부",
- 'desc' => "네이버 N 드라이브, 다음 클라우드 BOX 스토리지onedrive, 드롭박스, 웹하드 사용금지",
- 'select' => array('미사용'=>1, '사용'=>0),
+ 'title' => "P2P 프로그램 및 게임 설치 여부(5점)",
+ 'desc' => "(1:1 파일 교환 프로그램(토렌트 등) 및 게임프로그램의 설치 여부/단 허용 부서는 가능)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 15,
- 'title' => "15. 비인가 이동식 저장매체 사용 여부",
- 'desc' => "점검기간내에 외장하드 및 USB사용금지",
- 'select' => array('미사용'=>1, '사용'=>0),
+ 'title' => "비인가 파일 공유프로그램 설치 여부(5점)",
+ 'desc' => "(PC에 파일 공유 프로그램(N드라이브, 기타) 사용 금지. 단 총회에서 내려온 FTP는 사용 가능함)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 16,
- 'title' => "16. 가상 윈도우 설치 여부",
- 'desc' => "VMWare 사용금지",
- 'select' => array('미사용'=>1, '사용'=>0),
+ 'title' => "비인가 이동식 저장매체 사용 여부(5점)",
+ 'desc' => "(인가되지 않은 외장하드, USB메모리, 기타 사용 및 보관 방법, 외부 반출 여부)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 17,
- 'title' => "17. 출입문 보안 상태 여부",
- 'desc' => "사무실 시건장치 확인",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "비인가 노트북, 태블릿피씨 등 사용 여부(5점)",
+ 'desc' => "",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
+
  array('no'=> 18,
- 'title' => "18. 문서 보관함 잠금장치 및 관리 상태 여부",
- 'desc' => "담당자가 없을 시에 문서 및 자료 보관용 캐비넷은 잠겨 있어야함",
- 'select' => array('양호'=>1, '불량'=>0),
+ 'title' => "가상 윈도우 설치 여부(5점)",
+ 'desc' => "(VMWare 등)",
+ 'select' => array('양호'=>5, '불량'=>0),
  ),
- array('no'=> 19,
- 'title' => "19. 인가 컴퓨터 확인 여부",
- 'desc' => "PC사용 비품라벨이 부착되어 있어야함",
- 'select' => array('양호'=>1, '불량'=>0),
- ),
- array('no'=> 20,
- 'title' => "20. 자료방치여부",
- 'desc' => "담당자가 없을 시에 서류가 방치되어 있으면 안됨",
- 'select' => array('양호'=>1, '불량'=>0),
- ),
+
  );
 
-function _question($item, $preset) {
+function _question($no, $item, $preset) {
 
   $list = array();
   foreach ($item['select'] as $t=>$v) {
@@ -351,13 +316,12 @@ function _question($item, $preset) {
   $no = $item['no'];
   $fn = "q_$no";
 
-  //$preset = $form[$fn]; if (!$preset) $preset = '';
   $html = radio_list_general($fn, $list, $preset, '', false);
 
   print<<<EOS
-<table border='1' class='question'>
+<table class='question'>
 <tr>
-<td class='title'>{$item['title']}</td>
+<td class='title'>$no. {$item['title']}</td>
 </tr>
 <tr>
 <td class='desc'>{$item['desc']}</td>
@@ -372,7 +336,8 @@ EOS;
   print<<<EOS
 <style>
 div.question { border:5px solid green; width:800px; }
-table.question { border-collapse: collapse; width:800px; border:0px; margin-bottom:30px; }
+
+table.question { border-collapse: collapse; width:780px; border:1px solid #eee; margin-bottom:3px; }
 table.question td { width:800px; word-break: break-all; border:0px solid #eee; }
 table.question td.title { font-size:15pt; }
 table.question td.desc { font-size:12pt; padding-left:20px; color:#999; }
@@ -383,9 +348,8 @@ EOS;
 
   print<<<EOS
 <div class='question'>
-<form action='$env[self]' metho='post'>
-<p>점수: 
-<input type='text' name='point' value="{$row['point']}" size='10' onclick='this.select()' readonly style="color:#888; font-size:15pt;">점
+<form action='$env[self]' method='post'>
+<p>점수: <b style='font-size:20pt;'>{$row['point']}</b> 점</b>
 <input type='hidden' name='mac' value='$mac'>
 <input type='hidden' name='mode' value='save_point'>
 <input type='submit' value='저장'>
@@ -395,7 +359,7 @@ EOS;
   foreach ($data as $item) {
     $no = $item['no'];
     $preset = $row["p$no"];
-    _question($item, $preset);
+    _question($no, $item, $preset);
   }
 
   print<<<EOS

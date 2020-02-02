@@ -25,27 +25,16 @@ function _geoip_lookup($ip) {
 ### }}}
 
   AdminPageHead('iftop');
-  ParagraphTitle('iftop');
+  print notice_msg1("1분 마다 갱신됩니다.");
 
-  print<<<EOS
-<style>
-table.main { border:0px solid red; border-collapse:collapse; }
-table.main th, table.main td { border:1px solid #999; padding:2 9 2 9px; }
-table.main th { background-color:#eeeeee; font-weight:bold; text-align:center; }
-table.main td.c { text-align:center; }
-table.main td.r { text-align:right; }
-span.link { cursor:pointer; color:#880000; }
-</style>
-EOS;
   $path = "/www/gate/cron/iftoprc";
   $iftoprc = file_get_contents($path);
 
   $path = "/www/gate/cron/iftop.txt";
   $content = file_get_contents($path);
-  print<<<EOS
-<pre>
-updated every 1 min:
 
+  $raw_html=<<<EOS
+<pre>
 # /usr/local/sbin/iftop  -t  -c /www/gate/cron/iftoprc  -s 10 
 # cat /www/gate/cron/iftoprc
 ---------------------------
@@ -57,10 +46,10 @@ $content
 EOS;
 
     print<<<EOS
-<table border='1' class='main'>
+<table class='mmdata'>
 <tr>
-<th></th>
-<th></th>
+<th>번호</th>
+<th>IP</th>
 <th>국가</th>
 <th>부서</th>
 <th>이름</th>
@@ -122,6 +111,9 @@ EOS;
   print<<<EOS
 </table>
 EOS;
+
+  ParagraphTitle('원본 데이터', 1);
+  print($raw_html);
 
   print<<<EOS
 <script type='text/javascript'>

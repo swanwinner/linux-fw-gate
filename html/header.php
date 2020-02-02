@@ -6,32 +6,21 @@
 <title>$title</title>
 
 <!--
-<style type='text/css'> 
-body,input {  font-size: 12px; font-family: 굴림,돋움,verdana;
-  font-style: normal; line-height: 12pt;
-  text-decoration: none; color: #333333;
-}
-</style>
--->
-
-<!--
-<script src="/js/jquery-3.3.1.min.js"></script>
--->
 <script src="/js/jquery-1.12.4.min.js"></script>
+-->
+<script src="/js/jquery-3.3.1.min.js"></script>
 <script src="/utl/bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
 
 <link href="/utl/bootstrap-3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- Custom styles for this template -->
-<!--
-<link href="/css/navbar-fixed-top.css" rel="stylesheet">
--->
 <!-- Bootstrap Dropdown Hover CSS -->
 <link href="/utl/bootstrap_dropdown_hover/css/bootstrap-dropdownhover.min.css" rel="stylesheet">
 <!-- Bootstrap Dropdown Hover JS -->
 <script src="/utl/bootstrap_dropdown_hover/js/bootstrap-dropdownhover.min.js"></script>
 
 <link rel="stylesheet" type="text/css" href="/style.css">
+<script src="/js/script.js"></script>
+<script src="/js/mousetrap.min.js"></script>
 
 </head>
 

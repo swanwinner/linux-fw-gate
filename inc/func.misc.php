@@ -91,6 +91,7 @@ window.close();
 EOS;
 }
 
+/*
 function Pager($url, $page, $total, $ipp) {
   global $conf, $env;
 # print("$url $page $total<br>");
@@ -239,9 +240,10 @@ function MakeHttpQS($qopt=null, $extra=null) {
   }
   return $retval;
 }
+*/
 
 
-
+/*
 # 날짜입력폼
 # input_empty=true 이면 빈(empty) 선택을 넣는다.
 function DateInput3($prefix, $year=0, $month=0, $day=0, $onchange="",
@@ -336,14 +338,13 @@ function TimeInput($prefix, $ival=null) {
   print("</select>분");
 }
 
-
-
 function SafeFormValue($key, $maxlen=100) {
   global $form;
   $raw = $form[$key];
   if (strlen($raw) > $maxlen) iError("unsafe form value");
   return $raw;
 }
+*/
 
 # clear all cookies
 function ClearCookies($time=0) {
@@ -423,14 +424,7 @@ function Percent($value, $total) {
 }
 
 
-# 다운로드를 위한 HTTP 헤더
-function DownloadHeader($filename) {
-  header("Content-disposition: attachment; filename=\"$filename\"");
-  header("Content-type: application/octetstream");
-  header("Pragma: no-cache");
-  header("Expires: 0");
-}
-
+/*
 # 레지스트리 관리
 function GetRegistry($key) {
   $qry = "SELECT * FROM registry WHERE rkey='$key'";
@@ -444,18 +438,6 @@ function SetRegistry($key, $value) {
         ." ON DUPLICATE KEY UPDATE rkey='$key',rvalue='$value'";
   $row = DBQuery($qry);
   # }
-
-/*
-  # {
-  # 같은 키가 존재하면 insert 되지 않음
-  $qry = "INSERT INTO registry SET rvalue='$value', rkey='$key'";
-# print($qry);
-  $row = DBQuery($qry);
-  $qry = "UPDATE registry SET rvalue='$value' WHERE rkey='$key'";
-  $row = DBQuery($qry);
-  # }
-*/
-
   return null;
 }
 
@@ -474,90 +456,9 @@ EOS;
   }
   return $html;
 }
-
-# 정상적인 주민등록번호 인지 검사함
-function check_jumin_number($arg1, $arg2) {
-/*
-검사 원리 (알고리즘)
-
-주민등록번호는 앞자리가 6자리의 숫자로 구성되며, 태어난 날의
-연도, 월, 일을 나타내는 숫자이다. 뒷자리는 일련번호로서, 7자리로
-구성되며 첫 번째 숫자는 성별을 나타내는 의미를 가지고 있다.
-구분자인 '-' 기호를 빼면 총 13자리의 숫자로 구성되며, 정상적인
-번호인지를 가려낼 수 있는 자체적인 정보를 담고 있다. 
-
-정상적인 주민등록번호인지를 판별하기 위해서는 먼저 주민등록번호
-맨 뒷자리를 제외한 각 자릿수의 숫자들에 각각 지정된 숫자들을
-곱해서, 이 결과들을 더해야 한다. 각 자릿수에 지정된 승수들은
-다음과 같다. (아래에서 진하게 표시된 행은 주민등록번호를 나타낸다) 
-
-  1 2 3 4 5 6 - 1 2 3 4 5 6 7 
-X 2 3 4 5 6 7   8 9 2 3 4 5   
- 
-  n1 n2 n3 n4 n5 n6   n7 n8 n9 n10 n11 n12   
-
-각 자릿수에 지정된 승수들을 더한 값을 N이라고 하면, 
-
-N = n1 + n2 + n3 + ... + n12
-
-N을 11로 나눈 나머지를 11에서 뺀 수가 주민등록번호 마지막 자릿수와
-일치하면 정상적인 주민등록번호이다. 
-
-11 - (N % 11) = 마지막 자릿수
-
-N의 값이 11로 나누어 떨어지거나 나머지가 1이라면 위 식의 값은 10
-또는 11이 된다. 마지막 자릿수는 1자리이기 때문에 이런 경우에는
-비교할 때 같지 않은 것으로 처리되기 때문에 위 식을 다시 한번
-10으로 나누어 그 나머지를 취하여 마지막 자릿수와 비교해야 한다.
-따라서, 위 식을 다음과 같이 수정해야 한다. 
-
-(11 - (N % 11)) % 10 = 마지막 자릿수
-
 */
-  $jumin1 = $arg1;
-  $jumin2 = $arg2;
-  $n1 = substr($jumin1,0,1);
-  $n2 = substr($jumin1,1,1);
-  $n3 = substr($jumin1,2,1);
-  $n4 = substr($jumin1,3,1);
-  $n5 = substr($jumin1,4,1);
-  $n6 = substr($jumin1,5,1);
-  $n7 = substr($jumin2,0,1);
-  $n8 = substr($jumin2,1,1);
-  $n9 = substr($jumin2,2,1);
-  $n10 = substr($jumin2,3,1);
-  $n11 = substr($jumin2,4,1);
-  $n12 = substr($jumin2,5,1);
-  $n13 = substr($jumin2,6,1);
-  $sum = $n1*2+$n2*3+$n3*4+$n4*5+$n5*6+$n6*7+$n7*8+$n8*9+$n9*2+$n10*3+$n11*4+$n12*5;
-  if ((11-($sum % 11) % 10) == $n13) return false; # 정상
-  return true; # 오류
-}
 
-
-
-function MemberChangeHistory($inputno, $fld, $ctxt) {
-  global $_SESSION;
-
-  $m_inputno = $_SESSION['InputNo'];
-  $m_name = $_SESSION['Name'];
-
-  $qry = "INSERT INTO member_change_history"
-     ." SET inputno='$inputno'"
-     .",fld='$fld'"
-     .",ctxt='$ctxt'"
-     .",m_inputno='$m_inputno'"
-     .",m_name='$m_name'"
-     .",idate=NOW()";
-  $ret = DBQuery($qry);
-# $err = DBError();
-# if ($err) {
-#   print("$err<br>");
-#   exit;
-# }
-}
-
-
+/*
 # $form 변수로 부터 쿼리스트링을 만들어준다.
 function Qstr($form) {
   global $env;
@@ -571,24 +472,7 @@ function Qstr($form) {
   }
   return $retval;
 }
-
-# 사진파일이 존재하는지 여부
-function IsPictureUploaded($manno) {
-  $prefix = "/www/zion/Photo";
-
-  # 주민번호 형식에 맞지 않으면..
-  if ((strlen($manno) != 14) or (substr($manno, 6, 1) != '-')) {
-    $path = "$prefix/etc/$manno.jpg";
-  } else {
-    $year = substr($manno, 0, 2);
-    $path = "$prefix/$year/$manno.jpg";
-  }
-
-  # 사진파일이 존재하면
-  if (file_exists($path)) return true;
-  return false;
-}
-
+*/
 
 function SqlWhere(&$where, $value, $cond) {
   if ($value != '') {
@@ -600,6 +484,7 @@ function SqlWhere(&$where, $value, $cond) {
 }
 
 
+/*
 # DB 성능 모니터를 위한 타이밍 측정
 function CheckTiming($mode='check', $prefix='') {
   global $env;
@@ -625,6 +510,7 @@ function CheckTiming($mode='check', $prefix='') {
     return $prefix.$html;
   }
 }
+*/
 
 # form value: $form 에서 값을 얻어 옴
 function FV($key) {
@@ -650,31 +536,7 @@ function FV_CheckEmpty($key, $msg, $go_back=1, $win_close=0, $exit=1) {
 }
 
 
-
-
-# InputNoCounter 테이블에서 InputNo 번호를 딴다
-function NewInputNo() {
-
-  ##### 테이블을 잠근다.
-  $ret = DBQuery("LOCK TABLES InputNoCounter WRITE");
-
-  $qry = "SELECT InputNo FROM InputNoCounter";
-  $row = DBQueryAndFetchRow($qry);
-# print DBError();
-
-  $InputNo = $row['InputNo'];
-
-  $qry = "UPDATE InputNoCounter SET InputNo=InputNo+1"; # 1을 증가함
-  $ret = DBQuery($qry);
-# print DBError();
-
-  ##### 잠긴 테이블을 푼다.
-  $ret = DBQuery("UNLOCK TABLES");
-# print("$InputNo<br>");
-
-  return $InputNo;
-}
-
+/*
 # 한글 자르기
 function cut_str($msg,$cut_size,$tail="") { 
   $msg_size=strlen($msg); 
@@ -719,13 +581,16 @@ function back_cut($str,$len,$head="") {
 
     return $head.$result; 
 }
+*/
 
+/*
 // 디버깅을 위한 출력
 function dprint(&$var) {
   print("<pre>");
   print_r($var);
   print("</pre>");
 }
+*/
 
 
 # format byte data (reused from phpMyAdmin)
@@ -847,6 +712,19 @@ document.onkeypress = keypresshandler;
 EOS;
 }
 
+function button_box() {
+  $len = func_num_args();
+  $args = func_get_args();
+  $html = "<table border='0'><tr>";
+  for ($i = 0; $i < $len; $i++) {
+    $btn = $args[$i];
+    $html.="<td>";
+    $html.=$btn;
+    $html.="</td>";
+  }
+  $html.="</tr></table>";
+  return $html;
+}
 
 // $btn = button_general('', 0, "onclick()", $style='', $class='');
 function button_general($title='', $width=0, $onclick='', $style='', $class='') {
@@ -877,6 +755,29 @@ function textinput_general($fname, $preset='', $size='10', $onkeypress='', $clic
  value='$preset' $sy onkeypress='$onkeypress' onclick='$onclick'$ml$attr>
 EOS;
   return $html;
+}
+
+
+// $cb = checkbox_general('XXXX', $form['XXXX'], '제목', $onclick='', $value='', $cls='', $id='');
+function checkbox_general($fn, $preset, $title='', $onclick='', $value='', $cls='', $id='') {
+  if ($onclick) { $oc = " onclick=\"$onclick\""; }
+  if ($preset) $chk = ' checked'; else $chk = '';
+  if ($value) $v = " value='$value'";
+  if ($cls) $c = " class='$cls'";
+  if ($id) $i = " id='$id'";
+  $html = "<label$c><input type='checkbox' name='$fn' $chk $oc $v$c$i>$title</label>";
+  return $html;
+}
+
+
+// label form element
+function label_fe($title, $html, $cls='', $br=false) {
+  $s = '';
+  if ($cls == '') $cls = 'label';
+  if ($br) $s .= "<br>";
+  if ($title) $s .= "<span class='$cls'>$title</span>$html";
+  else $s .= $html;
+  return $s;
 }
 
 
@@ -1015,6 +916,17 @@ function table_oc_form($class='', $fn='', $action='', $method='', $id='', $table
   return array($open, $close);
 }
 
+
+# list($table_form_open, $table_form_close) = table_oc_form('mmdata', 'form2', $env['self'], 'post', 'maindata');
+# print $table_form_open; # {{
+# $hdr = '번호,이름,고유번호,지파,교회,부서,등록상태';
+# print table_head_general($hdr);
+# $dat = array(); $cls = array();
+# $dat[] = '번호'; $cls[] = '';
+# print table_data_general($dat, $cls, $include_tr_tag=true, $th=false);
+# print input_hidden_general('mode', '');
+# print $table_form_close; # }}
+
 # list($table_open, $table_close) = table_oc_form('mmdata', '', '', '', 'maindata');
 # print $table_open; # {{
 # print table_head_general('번호,이름,교회,부서,상태');
@@ -1068,6 +980,340 @@ function table_data_general($data, $classes=null, $include_tr_tag=true, $th=fals
   }
   if ($include_tr_tag) $html .= "</tr>";
   return $html;
+}
+
+// sql_where_match($w, 'realm', 'table.realm');
+function sql_where_match(&$w, $fn, $col) {
+  global $form;
+  $v = $form[$fn];
+  if ($v != '' && $v != 'all') { $w[] = "$col='$v'"; }
+}
+
+
+// sql_where_like($w, 'search', 'm.Name,m.NewNo');
+// sql_where_like($w, '', 'm.Name,m.NewNo', '키워드');
+//if ($v != '') $w[] = "((m.Name LIKE '%$v%') OR (m.NewNo LIKE '%$v%'))";
+// sv 값이 주어지면 $form 을 참조하지 않음
+function sql_where_like(&$w, $fn, $columns, $sv='', $match='center') {
+  global $form;
+  if ($sv == '') {
+    $v = $form[$fn]; if (!$v) return;
+  } else $v = $sv;
+  $v = trim($v);
+
+  $cols = preg_split("/,/", $columns);
+  $b = array();
+  foreach ($cols as $col) {
+    if ($match == 'center') $b[] = "($col LIKE '%$v%')";
+    else if ($match == 'left') $b[] = "($col LIKE '$v%')";
+    else if ($match == 'right') $b[] = "($col LIKE '%$v')";
+    else $b[] = "($col LIKE '%$v%')";
+  }
+  $str = join(" OR ", $b);
+  $w[] = "($str)";
+}
+
+
+
+#$sort_info = array(
+#  1 => array('m.Name','이름',1),
+#  2 => array('m.ManNo DESC','고유번호',0),
+#);
+#$html = sort_select($sort_info, $fn='sort');
+#$sql_order = sort_order($sort_info, $fn='sort');
+function sort_select($info, $fn='sort') {
+  global $form;
+  $preset = $form[$fn];
+
+  $html="<select name='$fn'>";
+  foreach ($info as $s => $item) {
+    list($o, $t, $d) = $item;
+    $chk = '';
+    if ($preset != '' && $s == $preset) $chk = ' selected';
+    if ($preset == '' && $d == 1) $chk = ' selected';
+    $html.="<option value='$s'$chk>$t</option>";
+  }
+  $html.="</select>";
+  return $html;
+}
+function sort_order($info, $fn='sort') {
+  global $form;
+  $preset = $form[$fn];
+
+  $ord = '';
+  foreach ($info as $s => $item) {
+    list($o, $t, $d) = $item;
+    if ($d) $default_order = $o;
+    if ($preset == $s) { $ord = $o; break; }
+  }
+  if ($ord == '') $ord = $default_order;
+  $sql_order = " ORDER BY $ord";
+  return $sql_order;
+}
+
+// $html = select_element('iflag', $opts, $id='', $onchange='');
+// $html = select_element('iflag', $opts);
+// print label_fe('출력', $html);
+function select_element($fn, $opts, $id='', $onchange='') {
+  if ($id) $ida = " id='$id'"; else $ida = '';
+  if ($onchange) $oc = " onchange='$onchange'"; else $oc = '';
+  $html=<<<EOS
+<select name='$fn' $ida$oc>$opts</select>
+EOS;
+  return $html;
+}
+
+// select option
+# $list = array('=선택=:null','전체요청:all','개명신청:name');
+# $preset = $form['rtype']; if ($preset=='') $preset = 'name';
+# $opt = option_general($list, $preset);
+# $html = select_element('rtyp', $opts, $id='');
+function option_general($list, $preset, $flag_add=true) {
+  $opts = "";
+  $tlist = $vlist = array();
+  foreach ($list as $item) {
+    list($t, $v) = preg_split("/:/", $item);
+    if ($v == '') $v = $t;
+    if ($v == 'null') $v = '';
+    $tlist[] = $t;
+    $vlist[] = $v;
+  }
+  //dd($tlist); dd($vlist);
+  // preset 이 리스트에 없으면 추가
+  if ($flag_add) {
+    if (!in_array($preset, $vlist)) { $tlist[] = $preset; $vlist[] = $preset; }
+  }
+
+  $len = count($vlist);
+  for ($i = 0; $i < $len; $i++) {
+    $v = $vlist[$i];
+    $t = $tlist[$i];
+    if ($v == $preset) $s = ' selected'; else $s = '';
+    $opts .= "<option value='$v'$s>$t</option>";
+  }
+  return $opts;
+}
+
+
+// form['fd01'] ,form['fd02'], .. 값을 검사하여 $fck 를 설정
+//  $fck = array(); // field check '' or ' checked'
+//   fck_init($fck, $defaults='1,4,5,6', $max=10);
+function fck_init(&$fck, $defaults='', $max=100) {
+  global $form;
+
+  $flag = false;
+  for ($i = 1; $i <= $max; $i++) {
+    $key = "fd$i";
+    $v = $form[$key];
+    if ($v != '') $flag = true;
+  }
+  if ($flag == false) {
+    $a = preg_split("/,/", $defaults);
+    foreach ($a as $idx) {
+      $key = "fd$idx";
+      $form[$key] = 'on';
+    }
+  }
+
+  $fck = array(); // field check '' or ' checked'
+  $flag = false;
+  for ($i = 1; $i <= $max; $i++) {
+    $key = "fd$i";
+    $v = $form[$key];
+    if ($v != '') $fck[$i] = ' checked';
+    else $fck[$i] = '';
+    if ($v != '') $flag = true;
+  }
+}
+
+
+// hiddenframe($debug, 'hiddenframe', 600, 600);
+//  hiddenframe.document.location = url;
+function hiddenframe($debug, $name='hiddenframe', $w=600, $h=600) {
+  if ($debug) {
+    print("<iframe name='$name' width='$w' height='$h' style='display:block'></iframe>");
+  } else {
+    print("<iframe name='$name' width='0' height='0' style='display:none'></iframe>");
+  }
+}
+
+// $html = span_link2('수정', "_edit('$id')");
+function span_link2($title, $onclick) {
+  $html =<<<EOS
+<span class=link onclick="$onclick">{$title}</span>
+EOS;
+  return $html;
+}
+
+
+function getHumanTime($s) {
+  //$unit = array('D'=>' days','H'=>' hours','M'=>' mins','S'=>' secs');
+  $unit = array('D'=>'일','H'=>'시간','M'=>'분','S'=>'초');
+
+  $m = $s / 60;
+  $h = $s / 3600;
+  $d = $s / 86400;
+  if ($m > 1) {
+    if ($h > 1) {
+      if ($d > 1) {
+        return (int)$d.$unit['D'];
+      } else {
+        return (int)$h.$unit['H'];
+      }
+    } else {
+      return (int)$m.$unit['M'];
+    }
+  } else {
+    return (int)$s.$unit['S'];
+  }
+}
+
+
+// $list = get_checked_list($prefix='cb');
+function get_checked_list($prefix='cb', $frm='') {
+  global $form;
+  if (!$frm) $frm = $form;
+
+  $keys = array_keys($frm);
+  $count = 0;
+  $info = array();
+  for ($i = 0; $i < count($keys); $i++) {
+    $key = $keys[$i];
+    $val = $form[$key];
+    list($a, $b) = explode('_', $key);
+    if ($a == $prefix) {
+      $count++;
+      $info[] = $b;
+    }
+  }
+  return $info;
+}
+
+// 페이지당 아이템 수
+// $ipp = get_ipp(20,$min=10,$max=500);
+//<span class='label'>출력</span><select name='ipp'>$opts</select>명/페이지
+function get_ipp($default=20, $min=10, $max=500) {
+  global $form;
+  $ipp = $form['ipp'];
+  if ($ipp == '') $ipp = $default;
+  if ($ipp < $min) $ipp = $min;
+  else if ($ipp > $max) $ipp = $max;
+  return $ipp;
+}
+
+
+//$opts = option_ipp($ipp, array(10,20,50,200,500));
+function option_ipp($preset='', $values='') {
+  $opts = '';
+  if (!$values) $values = array(10,20,50,100,200,500);
+  foreach ($values as $v) {
+     if ($preset == $v) $sel = ' selected'; else $sel = '';
+     $opts .= <<<EOS
+<option value='$v'$sel>$v</option>
+EOS;
+  }
+  return $opts;
+}
+
+
+function mktime_date_string($str) {
+  $y = (int)substr($str, 0, 4);
+  $m = (int)substr($str, 5, 2);
+  $d = (int)substr($str, 8, 2);
+  $h = (int)substr($str, 11, 2);
+  $i = (int)substr($str, 14, 2);
+  $s = (int)substr($str, 17, 2);
+  return mktime($h,$i,$s,$m,$d,$y);
+}
+
+function how_many_days_before($date) {
+  $s = mktime_date_string($date);
+  $now = time();
+  $days = floor(($now - $s)/3600/24);
+  return $days;
+}
+
+
+function how_many_seconds_before($udate, $for_human=false) {
+  $s = time() - mktime_date_string($udate);
+  if (!$for_human) return $s;
+
+  $m = floor($s / 60);
+  $s = $s % 60;
+  //dd("m=$m s=$s<br>");
+
+  $r = "{$m}분{$s}초";
+  return $r;
+}
+
+// 'x' 또는 ESC 를 누르면 팝업창을 닫게 한다.
+function xkey_close_window() {
+  global $env;
+
+  if (@$env['_xkey_']) return;
+  $env['_xkey_'] = true;
+
+  print<<<EOS
+<script>
+// single keys
+Mousetrap.bind('x', function() {
+  window.close();
+});
+Mousetrap.bind('esc', function() {
+  window.close();
+});
+Mousetrap.bind('1', function() {
+  window.moveTo(0,0);
+});
+Mousetrap.bind('2', function() {
+  window.moveBy(100,0);
+});
+Mousetrap.bind('3', function() {
+  window.moveBy(100000,0);
+});
+</script>
+EOS;
+
+}
+
+
+# list($table_open, $table_close) = table_oc_form('mmdata', '', '', '', 'maindata');
+# print $table_open; # {{
+# print $table_close; # }}
+# print $html = table_2column('제목', '내용', $c1='', $c2='', $a1='', $a2='', $cspan1='', $cspan2='', $include_tr_tag=true);
+function table_2column($data1, $data2, $c1='', $c2='', $a1='', $a2='', $cspan1='', $cspan2='', $include_tr_tag=true) {
+  if ($c1) $cls1 = " class='$c1'";
+  if ($c2) $cls2 = " class='$c2'";
+  if ($cspan1) $cspan1 = " colspan='$cspan1'";
+  if ($cspan2) $cspan2 = " colspan='$cspan2'";
+  $html = "";
+  if ($include_tr_tag) $html .= "<tr>";
+  $html .=<<<EOS
+<th$cls1 $a1$cspan1>$data1</th>
+<td$cls2 $a2$cspan2>$data2</td>
+EOS;
+  if ($include_tr_tag) $html .= "</tr>";
+  return $html;
+}
+
+
+
+// print notice_msg1("메시지입니다.");
+function notice_msg1($msg) {
+  $html =<<<EOS
+<p class='desc'>$msg</p>
+EOS;
+  return $html;
+}
+
+// $mac = my_mac_address();
+function my_mac_address() {
+  $ip = current_ip();
+  $command = "/sbin/arp -n | grep '$ip '";
+  $lastline = exec($command, $out, $retval);
+  list($a,$b,$c,$d,$e) = preg_split("/ +/", $lastline);
+  $mac = $c;
+  return $mac;
 }
 
 

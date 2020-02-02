@@ -200,17 +200,15 @@ EOS;
       $cls[] = ''; $dat[] = $cnt;
       $cls[] = 'l'; $dat[] = $ip_s;
       $cls[] = 'l'; $dat[] = $mac_s;
-      $cls[] = 'l'; $dat[] = $company;
+      $cls[] = 'l w200'; $dat[] = $company;
       $cls[] = ''; $dat[] = $bflag_s;
 
       $s = "<a href='home.php?mode=search&ip=$ip&ipmatch=1'>($mc1)</a>";
       $cls[] = ''; $dat[] = $s;
       $s = "<a href='home.php?mode=search&mac=$mac'>($mc2)</a>";
       $cls[] = ''; $dat[] = $s;
-      $s = "$row[dept]$dup";
-      $cls[] = ''; $dat[] = $s;
-      $s = "$row[name]$dup";
-      $cls[] = ''; $dat[] = $s;
+      $cls[] = ''; $dat[] = "$row[dept]$dup";
+      $cls[] = 'w200'; $dat[] = "$row[name]$dup";
       $cls[] = ''; $dat[] = $staticip_s;
       $cls[] = ''; $dat[] = $row['dtype'];
 
